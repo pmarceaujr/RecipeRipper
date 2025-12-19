@@ -142,7 +142,7 @@ def extract_text_from_image(file_path):
         raise Exception(f"Failed to extract text from image: {str(e)}")
 
 
-def parse_recipe_text(text, source_url=None):
+def parse_recipe_text(text, recipe_source=None, is_file=True):
     print(f"Parsing recipe text: {text}...")  # Debugging line
     """Use OpenAI to parse recipe text into structured format"""
     try:
@@ -151,7 +151,7 @@ def parse_recipe_text(text, source_url=None):
 {{
   "title": "recipe name",
   "classification": "one category: Breakfast, Lunch, Dinner, Dessert, Appetizer, Snack, Beverage, or Baking",
-  "primary_ingredient": "one choice: beef, chicken, pork, vegetables, fish, dairy, grains, pasta, lamb, game meator other",
+  "primary_ingredient": "one choice: Beef, Chicken, Pork, Vegetables, Fish, Dairy, Grains, Pasta, Lamb, Game Meat, or Other",
   "ingredients": [
     {{"ingredient": "all-purpose flour", "quantity": "2", "unit": "cups"}},
     {{"ingredient": "granulated sugar", "quantity": "1", "unit": "cup"}},
@@ -195,8 +195,15 @@ Text:
         recipe_data = json.loads(content)
         
         # Add source URL if provided
-        if source_url:
-            recipe_data['source_url'] = source_url
+        if recipe_source:
+            recipe_data['recipe_source'] = recipe_source
+
+        # Add source type (file or URL)
+        if is_file:
+            recipe_data['is_url'] = 1
+        else:
+            recipe_data['is_url'] = 0
+            
         
         return recipe_data
         

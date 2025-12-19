@@ -13,7 +13,8 @@ class Recipe(Base):
     title = Column(String(255), nullable=False)
     classification = Column(String(100))
     primary_ingredient = Column(String(100))
-    source_url = Column(Text)
+    is_url = Column(Integer, default=0)
+    recipe_source = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
     
     ingredients = relationship("Ingredient", back_populates="recipe", cascade="all, delete-orphan")
@@ -76,7 +77,8 @@ def save_recipe(recipe_data):
             title=recipe_data['title'],
             classification=recipe_data.get('classification', 'Uncategorized'),
             primary_ingredient=recipe_data.get('primary_ingredient', 'Unknown'),
-            source_url=recipe_data.get('source_url')
+            is_url=recipe_data.get('is_url', 0),
+            recipe_source=recipe_data.get('recipe_source')
         )
         session.add(recipe)
         session.flush()  # Get recipe.id
@@ -119,38 +121,165 @@ def save_recipe(recipe_data):
 
 def get_all_recipes():
     """Get all recipes with their ingredients and directions"""
-    session = get_session()
-    recipes = session.query(Recipe).all()
+    print("Inside get_all_recipes function")
+    try:
+        session = get_session()
+        recipes = session.query(Recipe).all()
+    except Exception as e:
+        session.rollback()
+        print(f"Error getting recipe: {e}")
+        raise e        
     
     result = []
-    for recipe in recipes:
-        recipe_dict = {
-            'id': recipe.id,
-            'title': recipe.title,
-            'classification': recipe.classification,
-            'primary_ingredient': recipe.primary_ingredient,
-            'source_url': recipe.source_url,
-            'created_at': recipe.created_at.isoformat(),
-            'ingredients': [
-                {
-                    'ingredient': ing.ingredient,
-                    'quantity': ing.quantity,
-                    'unit': ing.unit
-                } for ing in recipe.ingredients
-            ],
-            'directions': [
-                {
-                    'step_number': dir.step_number,
-                    'instruction': dir.instruction
-                } for dir in sorted(recipe.directions, key=lambda x: x.step_number)
-            ],
-            'comments': [
-                {
-                    'comments': comment.comments
-                } for comment in recipe.comments
-            ]
-        }
-        result.append(recipe_dict)
+    try:
+        print("Inside get_all_recipes try function")
+        for recipe in recipes:
+            recipe_dict = serialize_recipe(recipe)
+            result.append(recipe_dict)
+        
+        # session.close()
+        return result
+    except Exception as e:
+        session.rollback()
+        print(f"Error getting recipe: {e}")
+        raise e
+    finally:
+        session.close()
+
+def get_recipe_by_id(recipe_id):
+    """Get a recipe by ID"""
+    print("Inside get_recipe_by_id function")
+    try:
+        session = get_session()
+        recipe = session.query(Recipe).filter_by(id=recipe_id).first()
+        print(f"Recipe found: {recipe}")
+    except Exception as e:
+        session.rollback()
+        print(f"Error getting recipe: {e}")
+        raise e        
     
-    session.close()
-    return result
+    result = []
+    try:
+        print("Inside get_recipe_by_id try function")
+        print(f"title: {recipe.title}")
+        recipe_dict = serialize_recipe(recipe)
+
+        return recipe_dict
+    except Exception as e:
+        session.rollback()
+        print(f"Error getting recipe: {e}")
+        raise e
+    finally:
+        session.close()        
+
+def update_recipe(recipe_id, data):
+    session = get_session()
+    try:
+        recipe = session.query(Recipe).filter_by(id=recipe_id).first()
+        if not recipe:
+            return None
+
+        recipe.title = data.get("title", recipe.title)
+        recipe.classification = data.get("classification", recipe.classification)
+        recipe.primary_ingredient = data.get("primary_ingredient", recipe.primary_ingredient)
+        recipe.recipe_source = data.get("recipe_source", recipe.recipe_source)
+        recipe.is_url = data.get("is_url", recipe.is_url)
+
+        # Remove old ingredients and directions
+        session.query(Ingredient).filter_by(recipe_id=recipe.id).delete(synchronize_session=False)
+        session.query(Direction).filter_by(recipe_id=recipe.id).delete(synchronize_session=False)
+        session.query(Comment).filter_by(recipe_id=recipe.id).delete(synchronize_session=False)
+
+        # --- Ingredients ---
+        if "ingredients" in data:
+            # Remove existing ingredients
+            # for ing in recipe.ingredients:
+            #     session.delete(ing)
+            # session.flush()  # ensure deletion before adding new
+            # Add new ingredients
+            for ing_data in data["ingredients"]:
+                new_ing = Ingredient(
+                    recipe_id=recipe.id,
+                    ingredient=ing_data.get("ingredient"),
+                    quantity=ing_data.get("quantity"),
+                    unit=ing_data.get("unit")
+                )
+                session.add(new_ing)
+
+        # --- Directions ---
+        if "directions" in data:
+            # Remove existing directions
+            # for d in recipe.directions:
+            #     session.delete(d)
+            # session.flush()
+            # Add new directions
+            for dir_data in data["directions"]:
+                new_dir = Direction(
+                    recipe_id=recipe.id,
+                    step_number=dir_data.get("step_number"),
+                    instruction=dir_data.get("instruction")
+                )
+                session.add(new_dir)
+
+        # --- Comments ---
+        if "comments" in data:
+            # Remove existing comments
+            # for c in recipe.comments:
+            #     session.delete(c)
+            # session.flush()
+            # Add new comments
+            for comment_data in data["comments"]:
+                new_comment = Comment(
+                    recipe_id=recipe.id,
+                    comments=comment_data.get("comments")
+                )
+                session.add(new_comment)
+
+        session.commit()
+        recipe_dict = serialize_recipe(recipe)
+        return recipe_dict 
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+
+def delete_recipe(recipe_id):
+    session = get_session()
+    try:
+        recipe = session.query(Recipe).filter_by(id=recipe_id).first()
+        if not recipe:
+            return False
+
+        session.delete(recipe)
+        session.commit()
+        return True
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def serialize_recipe(recipe):
+    return {
+        "id": recipe.id,
+        "title": recipe.title,
+        "classification": recipe.classification,
+        "primary_ingredient": recipe.primary_ingredient,
+        "is_url": recipe.is_url,
+        "recipe_source": recipe.recipe_source,
+        "created_at": recipe.created_at.isoformat() if recipe.created_at else None,
+        "ingredients": [
+            {"ingredient": i.ingredient, "quantity": i.quantity, "unit": i.unit}
+            for i in getattr(recipe, "ingredients", [])
+        ],
+        "directions": sorted(
+            [{"step_number": d.step_number, "instruction": d.instruction}
+             for d in getattr(recipe, "directions", [])],
+            key=lambda x: x["step_number"]
+        ),
+        "comments": [{"comments": c.comments} for c in getattr(recipe, "comments", [])]
+    }

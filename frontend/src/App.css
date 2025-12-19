@@ -22,6 +22,16 @@
   padding: 20px;
 }
 
+.recipe-detail {
+  /* max-width: 1200px; */
+  margin: 0 auto;
+  padding-left: 50px;
+  padding-right: 50px;
+  padding-top: 20px;
+  padding-bottom: 50px;
+}
+
+
 .add-recipe-section {
   background: white;
   padding: 30px;
@@ -130,7 +140,7 @@ button:disabled {
   .delete-btn {
     background: none;
     border: none;
-    font-size: 1.5em;
+    font-size: 1.0em;
     cursor: pointer;
     padding: 0;
     margin-left: 10px;
@@ -139,8 +149,34 @@ button:disabled {
   .delete-btn:hover {
     transform: scale(1.2);
   }
-  
+
+  .recipe-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.edit-btn {
+    background: none;
+    border: none;
+    font-size: 1.0em;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 10px;
+}
+
+.edit-btn:hover {
+    transform: scale(1.2);
+}  
+
+
   .recipe-category {
+    color: #7f8c8d;
+    font-size: 0.9em;
+    margin: 5px 0;
+  }
+
+  .recipe-primary-ingredient {
     color: #7f8c8d;
     font-size: 0.9em;
     margin: 5px 0;
