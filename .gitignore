@@ -5,3 +5,4 @@ build/
 *.log
 .venv
 uploads/
+__pycache__/
