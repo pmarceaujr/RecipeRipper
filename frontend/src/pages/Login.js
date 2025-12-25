@@ -33,25 +33,35 @@ export default function Login() {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>Login</h2>
+    <div>
+      <div className="container-login">
+        <form onSubmit={handleSubmit}>
+          <h2>Login</h2>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+          {error && <p style={{ color: "red" }}>{error}</p>}
+          <div>
+            <label className='recipe-edit-label'>Email or Username:</label>
+            <input
+              placeholder="Email or Username"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className='recipe-edit-label'>Password:</label>
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          <button align="right" type="submit">Login</button>
+        </form>
 
-      <input
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
+      </div>
 
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-
-      <button type="submit">Login</button>
-    </form>
+      <label className='recipe-edit-label'>Don't have an account? You can register here: </label> <a href="/register">Register</a>
+    </div >
   );
 }

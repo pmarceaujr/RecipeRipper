@@ -1,6 +1,6 @@
-import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import api from "../api/axios";
 // import { Link, useParams } from 'react-router-dom';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -17,7 +17,7 @@ const RecipeEdit = () => {
   useEffect(() => {
     const fetchRecipe = async () => {
       try {
-        const res = await axios.get(`${API_URL}/api/recipe/${id}`);
+        const res = await api.get(`${API_URL}/api/recipe/${id}`);
         setRecipe(res.data);
       } catch (err) {
         setError('Failed to load recipe');
@@ -94,7 +94,7 @@ const RecipeEdit = () => {
     e.preventDefault();
     setError('');
     try {
-      await axios.put(`${API_URL}/api/recipe/${id}`, recipe);
+      await api.put(`${API_URL}/api/recipe/${id}`, recipe);
       alert('Recipe updated!');
       navigate(`/recipe/${id}`);
     } catch (err) {

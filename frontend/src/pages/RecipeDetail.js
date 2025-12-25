@@ -1,6 +1,6 @@
-import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import api from "../api/axios";
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -13,7 +13,7 @@ function RecipeDetail() {
   useEffect(() => {
     const fetchRecipe = async () => {
       try {
-        const response = await axios.get(`${API_URL}/api/recipe/${id}`);
+        const response = await api.get(`${API_URL}/api/recipe/${id}`);
         setRecipe(response.data);
       } catch (err) {
         setError('Failed to load recipe');

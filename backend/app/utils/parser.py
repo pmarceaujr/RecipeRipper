@@ -33,6 +33,7 @@ textract = boto3.client(
 )
 
 def scrape_url(url):
+    print("Scraping URL...")
     """Scrape recipe content from a URL"""
     try:
         headers = {
@@ -49,7 +50,7 @@ def scrape_url(url):
         
         # Get text content
         text = soup.get_text(separator='\n', strip=True)
-        print(f"Scraped text: {text}")  # Debugging line
+        # print(f"Scraped text: {text}")  # Debugging line
         
         # Clean up excessive whitespace
         text = re.sub(r'\n\s*\n', '\n\n', text)
@@ -73,7 +74,7 @@ def extract_text_from_pdf(file_path, filename):
             text = ""
             for page in reader.pages:
                 text += page.extract_text() + "\n"
-                print(f"Extracted text from PDF: {text}")  # Debugging line
+                # print(f"Extracted text from PDF: {text}")  # Debugging line
             return text
         else:
             print("Scanned PDF detected — running Textract OCR")
@@ -92,7 +93,7 @@ def extract_text_from_pdf(file_path, filename):
             s3.delete_object(Bucket=S3_BUCKET, Key=filename)
             # Combine lines of text
             lines = [block["Text"] for block in response["Blocks"] if block["BlockType"] == "LINE"]
-            print(f"Extracted text from Textract: {lines}")  # Debugging line
+            # print(f"Extracted text from Textract: {lines}")  # Debugging line
             return "\n".join(lines)
     except Exception as e:
         print(f"Error extracting text from PDF: {str(e)}")
@@ -143,91 +144,219 @@ def extract_text_from_image(file_path):
 
 
 def parse_recipe_text(text, recipe_source=None, is_file=True):
-    print(f"Parsing recipe text: {text}...")  # Debugging line
+    print("Parsing recipe text...")  # Debugging line
     """Use OpenAI to parse recipe text into structured format"""
     try:
         prompt = f"""Extract recipe information from the following text and return ONLY valid JSON with this exact structure
-(no markdown, no code blocks, just raw JSON).
+        (no markdown, no code blocks, just raw JSON).
 
-IMPORTANT:
-- Ingredients MUST be extracted verbatim as they appear in the text.
-- Directions MUST be rewritten into neutral, functional cooking steps.
-- Do NOT copy phrasing from the original directions.
-- Do NOT use expressive, descriptive, or narrative language in directions.
-- Preserve cooking order, timing, temperatures, and techniques exactly.
-- Use short, clear, instructional sentences.
+        IMPORTANT:
+        - Ingredients MUST be extracted verbatim as they appear in the text, but parsed correctly according to rules below.
+        - Directions MUST be rewritten into neutral, functional cooking steps.
+        - Do NOT copy phrasing from the original directions.
+        - Do NOT use expressive, descriptive, or narrative language in directions.
+        - Preserve cooking order, timing, temperatures, and techniques exactly.
+        - Use short, clear, instructional sentences.
 
-JSON STRUCTURE (EXACT):
-{
-  "title": "recipe name",
-  "course": "one category: Breakfast, Lunch, Dinner, Dessert, Appetizer, Snack, Beverage, or Baking",
-  "cuisine": "one category: American, Italian, Mexican, Chinese, Indian, French, German, Japanese, Thai, or Other",
-  "prep_time": "time in minutes",
-  "cook_time": "time in minutes",
-  "total_time": "time in minutes",
-  "servings": "number of servings",
-  "primary_ingredient": "one choice: Beef, Chicken, Pork, Vegetables, Fish, Dairy, Grains, Pasta, Lamb, Venison, Bear, Moose, or Other",
-  "ingredients": [
-    {"ingredient": "all-purpose flour", "quantity": "2", "unit": "cups"},
-    {"ingredient": "granulated sugar", "quantity": "1", "unit": "cup"},
-    {"ingredient": "large eggs", "quantity": "3", "unit": ""},
-    {"ingredient": "vanilla extract", "quantity": "1", "unit": "tsp"}
-  ],
-  "directions": [
-    {"step_number": 1, "instruction": "Preheat oven to 350°F"},
-    {"step_number": 2, "instruction": "Mix dry ingredients in a bowl"}
-  ],
-  "comments": []
-}
+        JSON STRUCTURE (EXACT):
+        {{
+        "title": "recipe name",
+        "course": "one category: Breakfast, Lunch, Dinner, Dessert, Appetizer, Snack, Beverage, or Baking",
+        "cuisine": "one category: American, Italian, Mexican, Chinese, Indian, French, German, Japanese, Thai, or Other",
+        "prep_time": "time in minutes",
+        "cook_time": "time in minutes",
+        "total_time": "time in minutes",
+        "servings": "number of servings",
+        "primary_ingredient": "one choice: Beef, Chicken, Pork, Vegetables, Fish, Dairy, Grains, Pasta, Lamb, Venison, Bear, Moose, or Other",
+        "ingredients": [
+            {{"ingredient": "all-purpose flour", "quantity": "2", "unit": "cups"}},
+            {{"ingredient": "granulated sugar", "quantity": "1", "unit": "cup"}},
+            {{"ingredient": "large eggs", "quantity": "3", "unit": ""}},
+            {{"ingredient": "tomato sauce", "quantity": "2", "unit": "cans"}},
+            {{"ingredient": "vanilla extract", "quantity": "1", "unit": "tsp"}}
+            {{"ingredient": "fresh basil leaves, roughly chopped", "quantity": "1", "unit": "handful"}}
+        ],
+        "directions": [
+            {{"step_number": 1, "instruction": "Preheat oven to 350°F"}},
+            {{"step_number": 2, "instruction": "Mix dry ingredients in a bowl"}}
+        ],
+        "comments": []
+        }}
 
-DIRECTION REWRITE RULES (MANDATORY):
-- Rewrite EVERY step; do NOT summarize or omit steps.
-- Do NOT reuse sentence structure or phrasing from the source.
-- Replace descriptive language with functional equivalents.
-- Output numbered steps starting at 1.
-- Do NOT mention the original source.
-- Do NOT add or remove ingredients or steps.
+        DIRECTION REWRITE RULES (MANDATORY):
+        - Rewrite EVERY step; do NOT summarize or omit steps.
+        - Do NOT reuse sentence structure or phrasing from the source.
+        - Replace descriptive language with functional equivalents.
+        - Output numbered steps starting at 1.
+        - Do NOT mention the original source.
+        - Do NOT add or remove ingredients or steps.
 
-UNIT NORMALIZATION (MANDATORY):
-All ingredient units MUST be converted to one of the following standard abbreviations.
-If the source text uses ANY other wording, convert it using this table.
+        UNIT NORMALIZATION (MANDATORY):
+        All ingredient units MUST be converted to one of the following standard abbreviations.
+        If the source text uses ANY other wording, convert it using this table.
 
-- teaspoon, teaspoons, tsp., tsps → "tsp"
-- tablespoon, tablespoons, tbsp., tbsps → "tbsp"
-- cup → "cup"
-- cups → "cups"
-- ounce, ounces, oz., ozs → "oz"
-- pound, pounds, lb., lbs → "lb"
-- gram, grams, g → "g"
-- kilogram, kilograms, kg → "kg"
-- milliliter, milliliters, ml → "ml"
-- liter, liters, l → "l"
-- pinch, pinches → "pinch"
-- dash, dashes → "dash"
-- clove, cloves → "clove"
+        - teaspoon, teaspoons, tsp., tsps → "tsp"
+        - tablespoon, tablespoons, tbsp., tbsps → "tbsp"
+        - cup, cups → "cup" or "cups" (keep plural when appropriate)
+        - can, cans → "can" or "cans"
+        - ounce, ounces, oz., ozs → "oz"
+        - pound, pounds, lb., lbs → "lb"
+        - gram, grams, g → "g"
+        - kilogram, kilograms, kg → "kg"
+        - milliliter, milliliters, ml → "ml"
+        - liter, liters, l → "l"
+        - pinch, pinches → "pinch"
+        - dash, dashes → "dash"
+        - clove, cloves → "clove"
 
-❗ DO NOT output full unit words (e.g., "teaspoon", "tablespoon").
-❗ DO NOT invent units.
-❗ If no unit is provided in the text, use an empty string "".
+        ❗ DO NOT output full unit words (e.g., "teaspoon", "tablespoon").
+        ❗ DO NOT invent units.
+        ❗ If no unit is provided in the text, use an empty string "".
 
-CRITICAL INGREDIENT RULES:
-1. Extract ALL ingredients — do not skip any.
-2. Parse quantities carefully: "1 tablespoon" → quantity="1", unit="tbsp".
-3. Keep descriptors with the ingredient name: "large sweet potatoes".
-4. If an ingredient has no quantity or unit, set them to empty string "".
-5. Units MUST strictly follow the Unit Normalization table.
-6. Preserve preparation notes in the ingredient name: "peeled and diced".
-7. Return ONLY the JSON object — no explanations, no markdown.
+        CONTAINER/PACKAGE PARSING RULES (MANDATORY - CRITICAL FOR CANS):
+        Handle can sizes and packaged items intelligently:
 
-FINAL VALIDATION RULE:
-Before returning the JSON, verify that EVERY ingredient.unit value is either:
-- one of the allowed abbreviations, or
-- an empty string "".
-If not, correct it.
+        Common patterns and correct parsing:
 
-Text:
-{text}"""
+        - "28 oz can tomatoes" / "28 ounce can" / "28-oz can of tomato sauce"  
+        → quantity="28", unit="oz", ingredient="tomatoes" (or "tomato sauce")
 
+        - "28-ounce can tomatoes" / "28-ounce can" / "28-oz can of tomato sauce"  
+        → quantity="28", unit="oz", ingredient="tomatoes" (or "tomato sauce")        
+
+        - "2 (28 oz) cans crushed tomatoes" / "two 28 ounce cans"  
+        → quantity="2", unit="cans", ingredient="crushed tomatoes"  
+        → Alternative (cleaner): quantity="2", unit="cans", ingredient="crushed tomatoes (28 oz each)"
+
+        - "2 cans (one 28 ounces, one 14-1/2 ounces) stewed tomatoes" / "two 28 oz cans of stewed tomatoes"
+        → quantity="2", unit="cans", ingredient="stewed tomatoes (one 28 oz, one 14.5 oz)"
+
+        - "2 cans (8 ounces each) tomato sauce" / "two 8 oz cans of tomato sauce"  
+        → quantity="2", unit="cans", ingredient="tomato sauce (8 oz)
+
+        - "1 can (16 ounces) kidney beans" / "one 16 oz can kidney beans"
+        → quantity="1", unit="can", ingredient="kidney beans (16 oz)"
+
+        - "one 15 ounce can black beans" / "1 8 oz can"  
+        → quantity="1", unit="can", ingredient="black beans (15 oz)"
+
+        - "8 oz can tomato paste" (no number before "8 oz")  
+        → quantity="1", unit="can", ingredient="tomato paste (8 oz)"  
+        or quantity="8", unit="oz", ingredient="tomato paste"
+
+        Preferred style: 
+        - If there's a clear count of containers (2 cans, three 28 oz cans, etc.) → use quantity as the number of cans, unit="can" or "cans", put size in ingredient name.
+        - If it's just "28 oz can" with no separate count → use quantity="28", unit="oz", ingredient="..." (most useful for shopping/scaling).
+
+        NEVER put "can", "oz", or "ounce" into the unit field if it's describing container size — unit must come only from the normalization table.
+
+        After applying these rules, ALWAYS verify that every .unit is one of: tsp, tbsp, cup, cups, can, cans, oz, lb, g, kg, ml, l, pinch, dash, clove, or "".
+
+        CRITICAL INGREDIENT RULES:
+        1. Extract ALL ingredients — do not skip any.
+        2. Parse quantities carefully: "1 tablespoon" → quantity="1", unit="tbsp".
+        3. Keep descriptors with the ingredient name: "large sweet potatoes", "drained", "cut into 1/2 inch slices", "roughly chopped".
+        4. If an ingredient has no quantity or unit, set them to empty string "".
+        5. Units MUST strictly follow the Unit Normalization table + container rules.
+        6. Preserve preparation notes in the ingredient name: "peeled and diced".
+        7. Return ONLY the JSON object — no explanations, no markdown.
+
+        FINAL VALIDATION RULE:
+        Before returning the JSON, verify that EVERY ingredient.unit value is either:
+        - one of the allowed abbreviations, or
+        - an empty string "".
+        If not, correct it.
+
+        Text:
+        {text}
+        """        
+        # prompt = f"""Extract recipe information from the following text and return ONLY valid JSON with this exact structure
+        # (no markdown, no code blocks, just raw JSON).
+
+        # IMPORTANT:
+        # - Ingredients MUST be extracted verbatim as they appear in the text.
+        # - Directions MUST be rewritten into neutral, functional cooking steps.
+        # - Do NOT copy phrasing from the original directions.
+        # - Do NOT use expressive, descriptive, or narrative language in directions.
+        # - Preserve cooking order, timing, temperatures, and techniques exactly.
+        # - Use short, clear, instructional sentences.
+
+        # JSON STRUCTURE (EXACT):
+        # {{
+        # "title": "recipe name",
+        # "course": "one category: Breakfast, Lunch, Dinner, Dessert, Appetizer, Snack, Beverage, or Baking",
+        # "cuisine": "one category: American, Italian, Mexican, Chinese, Indian, French, German, Japanese, Thai, or Other",
+        # "prep_time": "time in minutes",
+        # "cook_time": "time in minutes",
+        # "total_time": "time in minutes",
+        # "servings": "number of servings",
+        # "primary_ingredient": "one choice: Beef, Chicken, Pork, Vegetables, Fish, Dairy, Grains, Pasta, Lamb, Venison, Bear, Moose, or Other",
+        # "ingredients": [
+        #     {{"ingredient": "all-purpose flour", "quantity": "2", "unit": "cups"}},
+        #     {{"ingredient": "granulated sugar", "quantity": "1", "unit": "cup"}},
+        #     {{"ingredient": "large eggs", "quantity": "3", "unit": ""}},
+        #     {{"ingredient": "tomate sauce", "quantity": "2", "unit": "(8 oz cans)"}},
+        #     {{"ingredient": "vanilla extract", "quantity": "1", "unit": "tsp"}}
+        # ],
+        # "directions": [
+        #     {{"step_number": 1, "instruction": "Preheat oven to 350°F"}},
+        #     {{"step_number": 2, "instruction": "Mix dry ingredients in a bowl"}}
+        # ],
+        # "comments": []
+        # }}
+
+        # DIRECTION REWRITE RULES (MANDATORY):
+        # - Rewrite EVERY step; do NOT summarize or omit steps.
+        # - Do NOT reuse sentence structure or phrasing from the source.
+        # - Replace descriptive language with functional equivalents.
+        # - Output numbered steps starting at 1.
+        # - Do NOT mention the original source.
+        # - Do NOT add or remove ingredients or steps.
+
+        # UNIT NORMALIZATION (MANDATORY):
+        # All ingredient units MUST be converted to one of the following standard abbreviations.
+        # If the source text uses ANY other wording, convert it using this table.
+
+        # - teaspoon, teaspoons, tsp., tsps → "tsp"
+        # - tablespoon, tablespoons, tbsp., tbsps → "tbsp"
+        # - cup → "cup"
+        # - cups → "cups"
+        # - can → "can"
+        # - cans → "cans"
+        # - ounce, ounces, oz., ozs → "oz"
+        # - pound, pounds, lb., lbs → "lb"
+        # - gram, grams, g → "g"
+        # - kilogram, kilograms, kg → "kg"
+        # - milliliter, milliliters, ml → "ml"
+        # - liter, liters, l → "l"
+        # - pinch, pinches → "pinch"
+        # - dash, dashes → "dash"
+        # - clove, cloves → "clove"
+
+        # ❗ DO NOT output full unit words (e.g., "teaspoon", "tablespoon").
+        # ❗ DO NOT invent units.
+        # ❗ If no unit is provided in the text, use an empty string "".
+
+        # CRITICAL INGREDIENT RULES:
+        # 1. Extract ALL ingredients — do not skip any.
+        # 2. Parse quantities carefully: "1 tablespoon" → quantity="1", unit="tbsp".
+        # 3. Keep descriptors with the ingredient name: "large sweet potatoes", "can" or "cans".
+        # 4. If an ingredient has no quantity or unit, set them to empty string "".
+        # 5. Units MUST strictly follow the Unit Normalization table.
+        # 6. Preserve preparation notes in the ingredient name: "peeled and diced".
+        # 7. Return ONLY the JSON object — no explanations, no markdown.
+
+        # FINAL VALIDATION RULE:
+        # Before returning the JSON, verify that EVERY ingredient.unit value is either:
+        # - one of the allowed abbreviations, or
+        # - an empty string "".
+        # If not, correct it.
+
+        # Text:
+        # {text}
+        # """
+
+        print("Prompt....")  # Debugging line
         response = openai.chat.completions.create(
             model="gpt-4o-mini",  # Fast and accurate - or use "gpt-4o" for best results
             messages=[

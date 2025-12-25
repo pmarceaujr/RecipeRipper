@@ -1,6 +1,8 @@
 # config.py
 class BaseConfig:
-    SECRET_KEY = "default-secret"
+    SECRET_KEY = "super-secret-key"
+    JWT_SECRET_KEY="your-super-secret-key"
+    JWT_ALGORITHM = ""
     DEBUG = False
     SQLALCHEMY_DATABASE_URI = "sqlite:///recipes.db"
     SQLALCHEMY_TRACK_MODIFICATIONS = False

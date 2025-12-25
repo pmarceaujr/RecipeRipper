@@ -1,6 +1,6 @@
-import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import api from "../api/axios";
 import { useAuth } from "../auth/AuthContext";
 
 import "../App.css";
@@ -28,7 +28,8 @@ const handleLogout = () => {
 
   const fetchRecipes = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/recipes`);
+      const response = await api.get("/api/recipes");
+      console.log("Fetched recipes:", response.config.headers);
       setRecipes(response.data);
     } catch (err) {
       console.error("Error fetching recipes:", err);
@@ -53,8 +54,8 @@ const handleLogout = () => {
     formData.append("file", selectedFile);
 
     try {
-      const response = await axios.post(
-        `${API_URL}/api/recipes/upload`,
+      const response = await api.post(
+        "/api/recipes/upload",
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -78,8 +79,8 @@ const handleLogout = () => {
     setError("");
 
     try {
-      const response = await axios.post(
-        `${API_URL}/api/recipes/from-url`,
+      const response = await api.post(
+        "/api/recipes/from-url",
         { url }
       );
 
@@ -97,7 +98,7 @@ const handleLogout = () => {
     if (!window.confirm(`Delete "${title}"?`)) return;
 
     try {
-      await axios.delete(`${API_URL}/api/recipes/${id}`);
+      await api.delete(`${API_URL}/api/recipe/${id}`);
       await fetchRecipes();
     } catch (err) {
       setError("Failed to delete recipe");

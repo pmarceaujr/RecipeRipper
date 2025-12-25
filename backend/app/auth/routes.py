@@ -26,8 +26,9 @@ def register():
 def login():
     data = request.json
     user = User.query.filter_by(email=data['email']).first()
+    user_id = str(user.id)
     if user and user.check_password(data['password']):
-        token = create_access_token(identity=user.id)
+        token = create_access_token(identity=user_id)
         return jsonify(access_token=token)
     return jsonify({'msg': 'Bad credentials'}), 401
 

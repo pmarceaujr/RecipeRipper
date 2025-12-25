@@ -31,13 +31,11 @@ def create_app():
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
     # Register blueprints
-    from .recipes.routes import recipes_bp
     app.register_blueprint(recipes_bp, url_prefix='/api')
-    from .auth.routes import auth_bp 
     app.register_blueprint(auth_bp, url_prefix='/auth')    
 
     # Home route
-    @app.route('/')
+    @app.route('/health')
     def home():
         return {"message": "The Recipe Ripper Database API", "status": "running"}
 
