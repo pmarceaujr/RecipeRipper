@@ -1,67 +1,96 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import Logo from "./ImportLogo";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
+  const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
+  const [message, setMessage] = useState(null);
 
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const handleRegister = () => {
+    navigate("/register");
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setMessage(null); // Clear previous messages
 
-    const res = await fetch(`${API_URL}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
+    try {
+      const res = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, password }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (!res.ok) {
-      setError(data.error || "Login failed");
-      return;
+      if (!res.ok) {
+        setMessage(data.error || "Login failed");
+        return;
+      }
+
+      login(data.access_token);
+      navigate("/recipes");
+    } catch (err) {
+      setMessage("Login error. Please check your credentials and try again.");
+      console.error(err);
     }
-
-    login(data.access_token);
-    navigate("/recipes");
   };
 
   return (
     <div>
       <div className="container-login">
-        <form onSubmit={handleSubmit}>
-          <h2>Login</h2>
-
-          {error && <p style={{ color: "red" }}>{error}</p>}
+        <Logo alt="Recipe Ripper Logo" width="500" />
+        <form className="login-form" onSubmit={handleSubmit}>
           <div>
-            <label className='recipe-edit-label'>Email or Username:</label>
+          </div>
+          <h2>Login</h2>
+          <p>If you have an account, enter your email/username and password to log in.</p>
+          <p>If you do not have an account, click the Register button below to create an account.</p>
+
+          {message && (
+            <p style={{
+              color: message.includes("success") ? "green" : "red",
+              backgroundColor: "#f0f0f0",
+              fontWeight: "bold",
+              margin: "1rem 0"
+            }}>
+              {message}
+            </p>
+          )}
+
+          <div>
+            <label className='login-label'>Email or Username:</label>
             <input
+              className='login-input-text'
+              type="text"
               placeholder="Email or Username"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
             />
           </div>
           <div>
-            <label className='recipe-edit-label'>Password:</label>
+            <label className='login-label'>Password:</label>
             <input
+              className='login-input-text'
               type="password"
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
-          <button align="right" type="submit">Login</button>
+          <div className="login-div">
+            <button align="right" type="submit">Login</button>
+            <button align="left" onClick={handleRegister}>Register</button>
+          </div>
         </form>
-
       </div>
-
-      <label className='recipe-edit-label'>Don't have an account? You can register here: </label> <a href="/register">Register</a>
     </div >
   );
 }

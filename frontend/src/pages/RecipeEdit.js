@@ -243,7 +243,7 @@ const formattedDate = new Date(recipe.created_at).toLocaleString("en-US", {
               placeholder="Unit"
               onChange={(e) => handleIngredientChange(idx, 'unit', e.target.value)}
             />
-            <button className="edit-button" type="button" onClick={() => removeIngredient(idx)}>❌</button>
+            <button className="edit-btn" type="button" onClick={() => removeIngredient(idx)}>❌</button>
           </div>
         ))}
         <button className="add-button" type="button" onClick={addIngredient}>➕ Add Ingredient</button>
@@ -267,7 +267,7 @@ const formattedDate = new Date(recipe.created_at).toLocaleString("en-US", {
               placeholder="Instruction"
               onChange={(e) => handleDirectionChange(idx, 'instruction', e.target.value)}
             />
-            <button className="edit-button" type="button" onClick={() => removeDirection(idx)}>❌</button>
+            <button className="edit-btn" type="button" onClick={() => removeDirection(idx)}>❌</button>
           </div>
         ))}
         <button className="add-button" type="button" onClick={addDirection}>➕ Add Step</button>
@@ -290,7 +290,7 @@ const formattedDate = new Date(recipe.created_at).toLocaleString("en-US", {
               placeholder="Comments"
               onChange={(e) => handleCommentChange(idx, 'comments', e.target.value)}
             />
-            <button className="edit-button" type="button" onClick={() => removeComment(idx)}>❌</button>
+            <button className="edit-btn" type="button" onClick={() => removeComment(idx)}>❌</button>
           </div>
         ))}
 
@@ -299,7 +299,7 @@ const formattedDate = new Date(recipe.created_at).toLocaleString("en-US", {
           <hr />
         </p>
         <div>
-          <button type="submit">Save Recipe</button>
+          <button className="save-button" type="submit">Save Recipe</button>
         </div>
       </form>
       <p>

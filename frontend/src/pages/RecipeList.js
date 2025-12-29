@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import { useAuth } from "../auth/AuthContext";
 
-import "../App.css";
+// import "../App.css";
 
 // Use environment variable or default to localhost
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
@@ -105,6 +105,16 @@ const handleLogout = () => {
     }
   };
 
+  const handleEdit = async (id, title) => {
+    // if (!window.confirm(`Delete "${title}"?`)) return;
+
+    try {
+      navigate(`/recipe/${id}/edit`);
+      // await fetchRecipes();
+    } catch (err) {
+      setError(`Failed to navigate to edit page for "${title}".`);
+    }
+  };
   return (
     <div className="App">
       <header className="App-header">
@@ -146,7 +156,7 @@ const handleLogout = () => {
               {selectedFile && (
                 <div>
                   <p>Selected: {selectedFile.name}</p>
-                  <button onClick={handleFileUpload} disabled={loading}>
+                  <button style={{ width: "165px" }} onClick={handleFileUpload} disabled={loading}>
                     {loading ? "Processing..." : "Upload & Parse"}
                   </button>
                 </div>
@@ -168,7 +178,7 @@ const handleLogout = () => {
                   required
                 />
 
-                <button type="submit" disabled={loading}>
+                <button style={{ width: "135px" }} type="submit" disabled={loading}>
                   {loading ? "Processing..." : "Add Recipe"}
                 </button>
               </form>
@@ -228,14 +238,11 @@ const handleLogout = () => {
                   )}
                     <div className="recipe-actions">
                       <div className="tooltip">
-                        <Link to={`/recipe/${recipe.id}/edit`} className="edit-btn" title="Edit">✏️</Link>
-
+                      <button className="edit-btn" onClick={() => handleEdit(recipe.id)} title="Edit">✏️</button>
                       </div>
                       <div className="tooltip">
                       <button className="delete-btn" onClick={() => handleDelete(recipe.id, recipe.title)} title="Delete">🗑️</button>
-
-                      </div>
-
+                    </div>
                     </div>                  
                 </div>
               ))}

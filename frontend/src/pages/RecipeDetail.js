@@ -24,6 +24,11 @@ function RecipeDetail() {
     fetchRecipe();
   }, [id]);
 
+  // Simple print handler
+  const handlePrint = () => {
+    window.print();
+  };  
+
   if (loading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;
   if (!recipe) return <p>Recipe not found</p>;
@@ -39,15 +44,51 @@ const formattedDate = new Date(recipe.created_at).toLocaleString("en-US", {
 
   return (
     <div className="recipe-detail">
-      <h2>{recipe.title}</h2>
-      <p><strong>Course:</strong> {recipe.course}
-      <span style={{ marginLeft: "25px" }}></span>
-      <strong>Primary Ingredient:</strong> {recipe.primary_ingredient}
-      <span style={{ marginLeft: "25px" }}></span>
-      <strong>Cuisine:</strong> {recipe.cuisine}
+      {/* Header with title and print button */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '1.5rem',
+        flexWrap: 'wrap',
+        gap: '1rem'
+      }}>
+        <h2 style={{ margin: 0 }}>{recipe.title}</h2>
+
+        {/* Print Button */}
+        <button
+          onClick={handlePrint}
+          title="Print this recipe"
+          style={{
+            padding: '8px 16px',
+            backgroundColor: '#4CAF50',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            transition: 'background-color 0.2s'
+          }}
+          onMouseOver={e => e.currentTarget.style.backgroundColor = '#45a049'}
+          onMouseOut={e => e.currentTarget.style.backgroundColor = '#4CAF50'}
+        >
+          🖨️ Print
+        </button>
+      </div>
+
+
+      <p className='detail-p'>
+        <strong>Course:</strong> {recipe.course}
+        <span style={{ marginLeft: "25px" }}></span>
+        <strong>Primary Ingredient:</strong> {recipe.primary_ingredient}
+        <span style={{ marginLeft: "25px" }}></span>
+        <strong>Cuisine:</strong> {recipe.cuisine}
       </p>
 
-      <p>
+      <p className='detail-p'>
         <strong>Prep Time:</strong> {recipe.prep_time} minutes
         <span style={{ marginLeft: "25px" }}></span>
         <strong>Cook Time:</strong> {recipe.cook_time} minutes
@@ -59,7 +100,7 @@ const formattedDate = new Date(recipe.created_at).toLocaleString("en-US", {
       </p>      
 
       {recipe.recipe_source && (
-        <p>
+        <p className='detail-p'>
           <strong>Source:</strong>{' '}
           {recipe.is_url === "1" ? (
             recipe.recipe_source

@@ -11,8 +11,12 @@ mail = Mail()  # Init in factory if needed
 @auth_bp.route('/register', methods=['POST'])
 def register():
     data = request.json
-    if User.query.filter_by(email=data['email']).first():
-        return jsonify({'msg': 'Email exists'}), 400
+    existing_user = User.query.filter((User.username == data['username']) | (User.email == data['email'])).first()
+    if existing_user:
+        if existing_user.email == data['email']:
+            return jsonify({'error': 'Email already in use, please use a different email'}), 409
+        if existing_user.username == data['username']:
+            return jsonify({'error': 'Username already in use, please use a different username'}), 409
     user = User(username=data['username'], 
                 email=data['email'],
                 first_name=data['firstname'], 
@@ -25,7 +29,11 @@ def register():
 @auth_bp.route('/login', methods=['POST'])
 def login():
     data = request.json
-    user = User.query.filter_by(email=data['email']).first()
+    user = User.query.filter_by(email=data['userId']).first()
+    if not user:
+        user = User.query.filter_by(username=data['userId']).first()
+    if not user:
+        return jsonify({'error': 'User not found.  Please check your credentials or register for an account.'}), 401
     user_id = str(user.id)
     if user and user.check_password(data['password']):
         token = create_access_token(identity=user_id)

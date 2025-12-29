@@ -1,28 +1,96 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../auth/AuthContext";
-import "../css/LandingPage.css";
+import { Link, useNavigate } from "react-router-dom";
+import "../assets/css/LandingPage.css";
 
 export default function LandingPage() {
+  const navigate = useNavigate();
+
+  const handleLogin = () => {
+    navigate("/login");
+  };
+
+    const handleRegister = () => {
+    navigate("/register");
+  };
+
   return (
     <div className="landing-container">
       <div className="landing-content">
         <h1>Welcome to The Recipe Ripper Database!</h1>
-        <p>Your personal place on the web to store, search, and organize your favorite recipes.</p>
+        <p>Your personal place on the web to store, organize and search your favorite recipes.</p>
 
-        {/* Link to your React login page */}
-        <a href="/login" className="login-link">
-          Go to Login
-        </a>
 
-        {/* Video placeholder */}
-        <div >
-          Should be playing a video here
-          <video width="400" autoPlay loop muted playsInline>
-            <source src="/videos/Recipe_Webpage_Scrolling.mp4" type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
+
+        {/* Link to React login page */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
+        <button className="landing-button" onClick={handleLogin} style={{ width: '125px' }} >
+          Login
+        </button>
+        <button className="landing-button" onClick={handleRegister} style={{ width: '125px' }}>
+          Register
+        </button>
         </div>
+        <div >
+          <p>We "rip" the key content from the recipes you love and remove all the "stuffing."</p>
+
+        </div>        
+        {/* Video placeholder */}
+        <div style={{ maxWidth: '70%',  margin: '0 auto',  padding: '20px',}}>
+
+          {/* Main container with two columns */}
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '32px', alignItems: 'start',}}>
+            {/* Left column */}
+            <div style={{ textAlign: 'center' }}>
+              <h3 style={{ 
+                marginBottom: '12px',
+                fontSize: '1.4rem',
+                fontWeight: '400',
+              }}>
+                Go from this....
+              </h3>
+
+
+              <video width="100%"  autoPlay loop muted playsInline
+                style={{ 
+                borderRadius: '12px',
+                boxShadow: '0 8px 25px rgba(0,0,0,0.25)',
+                width: '100%',
+                maxWidth: '500px',
+                height: 'auto',
+                display: 'block',
+                margin: '0 auto'
+              }}>
+                <source src="/assets/videos/blog_video.mp4" type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+  
+            </div>
+            {/* Right column */}
+            <div style={{ textAlign: 'center' }}>
+              <h3 style={{
+                marginBottom: '12px',
+                fontSize: '1.4rem',
+                fontWeight: '400',
+              }}>
+                ....to this!
+              </h3>
+              <video width="100%" autoPlay loop muted playsInline
+                style={{ 
+                borderRadius: '12px',
+                boxShadow: '0 8px 25px rgba(0,0,0,0.25)',
+                width: '100%',
+                maxWidth: '500px',
+                height: 'auto',
+                display: 'block',
+                margin: '0 auto'                
+              }}>
+                <source src="/assets/videos/Content_only.mp4" type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            </div>
+          </div> {/* End main container */}
+        </div> {/* End video placeholder */}
+
+
       </div>
     </div>
   );
