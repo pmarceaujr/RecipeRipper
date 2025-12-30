@@ -20,13 +20,14 @@ def create_app():
     # Config for overrides and keeping secrets out of the codebase
     app.config.from_pyfile('config.py')  
 
-    # Database configuration - use Heroku DATABASE_URL when present
-    database_uri = os.environ.get('DATABASE_URL')
-    if database_uri and database_uri.startswith("postgres://"):
-        # Heroku uses "postgres://" but SQLAlchemy wants "postgresql://"
-        database_uri = database_uri.replace("postgres://", "postgresql://", 1)
+ # Use Postgres on Heroku, SQLite locally
+    DATABASE_URL = os.environ.get('DATABASE_URL')
 
-    app.config['SQLALCHEMY_DATABASE_URI'] = database_uri or 'sqlite:///recipes.db'  # fallback for local
+    if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+        # Heroku provides "postgres://" but SQLAlchemy wants "postgresql://"
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    
+    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL or "sqlite:///recipes.db"
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Init extensions
