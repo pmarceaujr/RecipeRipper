@@ -1,0 +1,11 @@
+frontend/node_modules/
+.env
+.DS_Store
+*.log
+.venv
+uploads/
+__pycache__/
+backend/instance/
+instance/
+*.db
+
