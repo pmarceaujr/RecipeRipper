@@ -18,7 +18,14 @@ def create_app():
         app.config.from_object(DevelopmentConfig)
 
     # Config for overrides and keeping secrets out of the codebase
-    app.config.from_pyfile('config.py')  
+    # Load config file only in development / when it exists
+    config_path = 'config.py'
+    if os.path.isfile(config_path):
+        app.config.from_pyfile(config_path)
+        print("Loaded local config.py")
+    else:
+        print("No local config.py → relying on ENV variables")    
+    # app.config.from_pyfile('config.py')  
 
  # Use Postgres on Heroku, SQLite locally
     DATABASE_URL = os.environ.get('DATABASE_URL')
