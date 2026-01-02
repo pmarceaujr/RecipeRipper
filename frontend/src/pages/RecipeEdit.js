@@ -119,7 +119,7 @@ const formattedDate = new Date(recipe.created_at).toLocaleString("en-US", {
           {/* LEFT SIDE */}
           <div className="edit-left">
               <div>
-                <label className='recipe-edit-label'>Title:</label>
+              <label className='recipe-edit-label'>Recipe Name:</label>
                 <input
                   className='recipe-edit-input-text'
                   type="text"
@@ -168,7 +168,7 @@ const formattedDate = new Date(recipe.created_at).toLocaleString("en-US", {
           {/* RIGHT SIDE */}
           <div className="edit-right">
               <div>
-                <label className='recipe-edit-label'>Prep Time:</label>
+              <label className='recipe-edit-label'>Prep Time (minutes):</label>
                 <input
                   className='recipe-edit-input-text'
                   type="text"
@@ -178,7 +178,7 @@ const formattedDate = new Date(recipe.created_at).toLocaleString("en-US", {
                 />
             </div>
             <div>
-              <label className='recipe-edit-label'>Cook Time:</label>
+              <label className='recipe-edit-label'>Cook Time (minutes):</label>
               <input
                 className='recipe-edit-input-text'
                 type="text"
@@ -187,7 +187,7 @@ const formattedDate = new Date(recipe.created_at).toLocaleString("en-US", {
               />
             </div>
             <div>
-              <label className='recipe-edit-label'>Total Time:</label>
+              <label className='recipe-edit-label'>Total Time (minutes):</label>
               <input
                 className='recipe-edit-input-text'
                 type="text"
@@ -220,80 +220,149 @@ const formattedDate = new Date(recipe.created_at).toLocaleString("en-US", {
         </p>
         {/* Ingredients */}
         <h3>Ingredients</h3>
-        {recipe.ingredients.map((ing, idx) => (
-          <div key={idx} className="ingredient-row">
-            <input
-              className="ingedients-input-item"
-              type="text"
-              value={ing.ingredient}
-              placeholder="Ingredient"
-              onChange={(e) => handleIngredientChange(idx, 'ingredient', e.target.value)}
-            />
-            <input
-              className="ingedients-input-qty"
-              type="text"
-              value={ing.quantity}
-              placeholder="Quantity"
-              onChange={(e) => handleIngredientChange(idx, 'quantity', e.target.value)}
-            />
-            <input
-              className="ingedients-input-unit"
-              type="text"
-              value={ing.unit}
-              placeholder="Unit"
-              onChange={(e) => handleIngredientChange(idx, 'unit', e.target.value)}
-            />
-            <button className="edit-btn" type="button" onClick={() => removeIngredient(idx)}>❌</button>
-          </div>
-        ))}
-        <button className="add-button" type="button" onClick={addIngredient}>➕ Add Ingredient</button>
+
+        <table class="ingredient-table">
+          <thead>
+            <tr>
+              <th className='ingredient-item-th-td'>Item</th>
+              <th className='ingredient-qty-th-td'>Qty</th>
+              <th className='ingredient-unit-th-td'>Measure</th>
+              <th className='ingredient-delete-th-td'>Delete</th>
+            </tr>
+          </thead>
+          <tbody>
+            {recipe.ingredients.map((ing, idx) => (
+              <tr key={idx}>
+                <td className='ingredient-item-th-td'>
+                  <input
+                    className="ingredients-input-item"
+                    type="text"
+                    value={ing.ingredient}
+                    placeholder="Ingredient"
+                    onChange={(e) => handleIngredientChange(idx, 'ingredient', e.target.value)}
+                  />
+                </td>
+                <td className='ingredient-qty-th-td'>
+                  <input
+                    className="ingredients-input-qty"
+                    type="text"
+                    value={ing.quantity}
+                    placeholder="Quantity"
+                    onChange={(e) => handleIngredientChange(idx, 'quantity', e.target.value)}
+                  />
+                </td>
+                <td className='ingredient-unit-th-td'>
+                  <input
+                    className="ingredients-input-unit"
+                    type="text"
+                    value={ing.unit}
+                    placeholder="Unit"
+                    onChange={(e) => handleIngredientChange(idx, 'unit', e.target.value)}
+                  />
+                </td>
+                <td className='ingredient-delete-th-td'>
+                  <button
+                    className="edit-btn"
+                    type="button"
+                    onClick={() => removeIngredient(idx)}
+                  >
+                    ❌
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <button className="add-button" type="button" onClick={addIngredient}>
+          ➕ Add Ingredient
+        </button>
         <p>
           <hr />
         </p>
         {/* Directions */}
         <h3>Directions</h3>
-        {recipe.directions.map((dir, idx) => (
-          <div key={idx} className="direction-row">
-            <input
-              className="directions-input-step"
-              type="number"
-              value={dir.step_number}
-              onChange={(e) => handleDirectionChange(idx, 'step_number', e.target.value)}
-            />
-            <input
-              className='directions-input-text'
-              type="text"
-              value={dir.instruction}
-              placeholder="Instruction"
-              onChange={(e) => handleDirectionChange(idx, 'instruction', e.target.value)}
-            />
-            <button className="edit-btn" type="button" onClick={() => removeDirection(idx)}>❌</button>
-          </div>
-        ))}
-        <button className="add-button" type="button" onClick={addDirection}>➕ Add Step</button>
+
+        <table class="directions-table">
+          <thead>
+            <tr>
+              <th className='direction-step-th-td'>Step</th>
+              <th className='direction-instruction-th-td'>Instruction</th>
+              <th className='direction-delete-th-td'>Delete</th>
+            </tr>
+          </thead>
+          <tbody>
+            {recipe.directions.map((dir, idx) => (
+              <tr key={idx}>
+
+                <td className='direction-step-th-td'>
+                  <input
+                    className="directions-input-step"
+                    type="number"
+                    value={dir.step_number}
+                    onChange={(e) => handleDirectionChange(idx, 'step_number', e.target.value)}
+                  />
+                </td>
+
+                <td className='direction-instruction-th-td'>
+                  <input
+                    className='directions-input-text'
+                    type="text"
+                    value={dir.instruction}
+                    placeholder="Instruction"
+                    onChange={(e) => handleDirectionChange(idx, 'instruction', e.target.value)}
+                  />
+                </td>
+
+                <td className='direction-delete-th-td'>
+                  <button className="edit-btn" type="button" onClick={() => removeDirection(idx)}>❌</button>
+                </td>
+
+
+
+
+              </tr>
+            ))}
+            <button className="add-button" type="button" onClick={addDirection}>➕ Add Step</button>
+          </tbody>
+        </table>
         <p>
           <hr />
         </p>
+
         {/* Comments */}
         <h3>Comments</h3>
-        {recipe.comments.map((comment, idx) => (
-          <div key={idx} className="comment-row">
-            {/* <input
-              type="number"
-              value={comment.id}
-              onChange={(e) => handleCommentChange(idx, 'id', e.target.value)}
-            /> */}
-            <input
-              className='comments-input-text'
-              type="text"
-              value={comment.comments}
-              placeholder="Comments"
-              onChange={(e) => handleCommentChange(idx, 'comments', e.target.value)}
-            />
-            <button className="edit-btn" type="button" onClick={() => removeComment(idx)}>❌</button>
-          </div>
-        ))}
-
+        <table class="comments-table">
+          <thead>
+            <tr>
+              <th className='comment-th-td'>Comments</th>
+              <th className='comment-delete-th-td'>Delete</th>
+            </tr>
+          </thead>
+          <tbody>
+            {recipe.comments.map((comment, idx) => (
+              <tr key={idx} className="comment-row">
+                <td className='comment-th-td'>
+                  {/* <input
+                  type="number"
+                  value={comment.id}
+                  onChange={(e) => handleCommentChange(idx, 'id', e.target.value)}
+                /> */}
+                  <input
+                    className='comments-input-text'
+                    type="text"
+                    value={comment.comments}
+                    placeholder="Comments"
+                    onChange={(e) => handleCommentChange(idx, 'comments', e.target.value)}
+                  />
+                </td>
+                <td className='comment-delete-th-td'>
+                  <button className="edit-btn" type="button" onClick={() => removeComment(idx)}>❌</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
         <button className="add-button" type="button" onClick={addComment}>➕ Add Comment</button>
         <p>
           <hr />

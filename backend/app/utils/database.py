@@ -85,13 +85,17 @@ def get_all_recipes(user_id):
     """Get all recipes with their ingredients and directions"""
     print("Inside get_all_recipes function")
     # user_id_= int(user_id)
-    recipe_data = Recipe.query.filter_by(user_id=user_id)
-    result = []
     try:
-        for recipe in recipe_data:
-            recipe_dict = serialize_recipe(recipe)
-            result.append(recipe_dict)
-        return result
+        recipe_data = Recipe.query.filter_by(user_id=user_id)
+        if recipe_data is not None:
+            result = []
+            for recipe in recipe_data:
+                recipe_dict = serialize_recipe(recipe)
+                result.append(recipe_dict)
+            return result
+        else:
+            return recipe_data
+
     except Exception as e:
         print(f"Error getting recipe: {e}")
         raise e

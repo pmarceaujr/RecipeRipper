@@ -27,8 +27,8 @@ def get_recipes():
         user_id = get_jwt_identity()
         print(f"User ID: {user_id}")
         recipes = get_all_recipes(user_id)
-        if not recipes:
-            return jsonify({"error": "No Recipes found"}), 404        
+        if not recipes or len(recipes) == 0:
+            return jsonify({"msg": "You currently do not have any recipes saved."}), 204         
         return jsonify(recipes)
     except Exception as e:
         current_app.logger.error(f"Error fetching recipes: {e}")

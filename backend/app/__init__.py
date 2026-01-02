@@ -21,6 +21,10 @@ def create_app():
 
     app.config.from_pyfile('config.py', silent=True)
 
+    if env == "production":
+        app.config.update({'DATABASE_URL': app.config.get('DATABASE_URL')})
+        
+
     app.config.update({
         # Security / Auth
         'SECRET_KEY': os.environ.get('SECRET_KEY') or app.config.get('SECRET_KEY'),
@@ -57,6 +61,10 @@ def create_app():
         print(f"│ {key: <28} : {value!r}")
     print("└────────────────────────────────────────────────────────────┘")
 
+    if os.environ.get('OPENAI_API_KEY') == None:
+        os.environ['OPENAI_API_KEY'] = app.config.get('OPENAI_API_KEY')
+
+    print(f"'OPENAI_API_KEY': {os.environ.get('OPENAI_API_KEY')}")
 
  # Use Postgres on Heroku, SQLite locally
     # print(f"database url123: {DATABASE_URL}")

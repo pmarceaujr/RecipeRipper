@@ -181,8 +181,45 @@ input[type="url"] {
   font-size: 1.2em;
 }
 
+.ingredient-table {
+  width: 100%;
+  max-width: 600px;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.directions-table {
+  width: 100%;
+  max-width: 750px;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.comments-table {
+  width: 100%;
+  max-width: 750px;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+
+.direction-instruction-th-td {
+  width: 650px;
+  padding: 1px 10px 1px 0px;
+}
+
+.direction-step-th-td {
+  width: 50px;
+  padding: 1px 10px 1px 0px;
+}
+
+.direction-delete-th-td {
+  width: 50px;
+  padding: 1px 10px 1px 10px;
+  text-align: center;
+}
 .directions-input-step {
-  width: 30px;
+    width: 40px;
   padding-left: 5px;
   margin-right: 25px;
   border: 1px solid #ddd;
@@ -191,7 +228,7 @@ input[type="url"] {
 }
 
 .directions-input-text {
-  width: 615px;
+  width: min(100%, 650px);
   padding-left: 5px;
   margin-right: 25px;
   border: 1px solid #ddd;
@@ -199,6 +236,16 @@ input[type="url"] {
   font-size: 1em;
 }
 
+.comment-th-td {
+  width: 700px;
+  padding: 1px 10px 1px 0px;
+}
+
+.comment-delete-th-td {
+  width: 50px;
+  padding: 1px 10px 1px 10px;
+  text-align: center;
+}
 
 
 .comments-input-text {
@@ -210,17 +257,48 @@ input[type="url"] {
   font-size: 1em;
 }
 
-.ingedients-input-item {
+.ingredient-row {
+  display: flex;
+  box-sizing: border-box;
+  flex-wrap: nowrap;
+  width: 100%;
+  max-width: 600px;
+  margin: 25;
+}
+
+.ingredients-input-item {
+  width: min(100%, 400px);
+  padding-left: 5px;
+  padding-right: 0;
+  margin-right: 25px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1em;
+}
+
+.ingredient-item-th-td {
   width: 400px;
-  padding-left: 5px;
-  margin-right: 25px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1em;
+  padding: 1px 10px 1px 0px;
 }
 
-.ingedients-input-qty {
+.ingredient-qty-th-td {
   width: 60px;
+  padding: 1px 10px 1px 10px;
+  }
+  
+  .ingredient-unit-th-td {
+    width: 80px;
+    padding: 1px 10px 1px 10px;
+  }
+  
+  .ingredient-delete-th-td {
+    width: 50px;
+    padding: 1px 10px 1px10px;
+    text-align: center;
+  }
+  
+  .ingredients-input-qty {
+    width: min(100%, 60px);
   padding-left: 5px;
   margin-right: 25px;
   border: 1px solid #ddd;
@@ -228,14 +306,15 @@ input[type="url"] {
   font-size: 1em;
 }
 
-.ingedients-input-unit {
-  width: 150px;
+.ingredients-input-unit {
+  width: min(100%, 150px);
   padding-left: 5px;
   margin-right: 25px;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 1em;
 }
+
 button {
   background: var(--butter);
   color: var(--dark-sage);
@@ -260,6 +339,29 @@ button:disabled {
   cursor: not-allowed;
 }
 
+.print-button {
+  /* padding: 8px; */
+  background-color: var(--butter);
+  color: var(--dark-sage);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.print-button:hover:not(:disabled) {
+  background-color: var(--dark-sage);
+  color: var(--butter);
+  font-weight: 600;
+}
+
+.print-button:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+}
 .edit-button {
   background-color: #ffffff;
   color: white;
@@ -283,7 +385,7 @@ button:disabled {
 .add-button {
   background-color: var(--butter);
   color: var(--dark-sage);  
-  width: 150px;
+  width: 160px;
   font-weight: 600;
   padding: 0.6rem 1.2rem;
   border: none;
@@ -342,6 +444,13 @@ button:disabled {
   margin-bottom: 20px;
 }
 
+.status-message {
+  background-color: #99fa96;
+  color: rgb(0, 0, 0);
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
 .loading {
   text-align: center;
   font-size: 1.2em;

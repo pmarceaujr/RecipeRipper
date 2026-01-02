@@ -6,15 +6,17 @@ import { useAuth } from "../auth/AuthContext";
 // import "../App.css";
 
 // Use environment variable or default to localhost
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+const API_URL = process.env.REACT_APP_API_URL 
 
 export default function RecipeList() {
   const [recipes, setRecipes] = useState([]);
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const { logout } = useAuth();
+  const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,9 +28,20 @@ const handleLogout = () => {
   navigate("/login");
 };
 
+  const handleLogin = () => {
+    logout();
+    navigate("/login");
+  };
+
   const fetchRecipes = async () => {
     try {
       const response = await api.get("/api/recipes");
+      if (response.status === 204) {
+        // Handle "no content" case – show your message
+        setRecipes([]); // or set a flag
+        setMessage("You currently do not have any recipes saved.  Let's get started!");
+        return;
+      }      
       console.log("Fetched recipes:", response.config.headers);
       setRecipes(response.data);
     } catch (err) {
@@ -120,16 +133,18 @@ const handleLogout = () => {
       <header className="App-header">
         <h1>🍳 The Recipe Ripper Database</h1>
         <button
-            onClick={handleLogout}
-            style={{
-              position: "absolute",
-              top: "20px",
-              right: "20px",
-              padding: "8px 12px",
-              cursor: "pointer",
-            }}>
-            Logout
-        </button>        
+          onClick={isLoggedIn ? handleLogout : handleLogin}
+          style={{
+            position: "absolute",
+            top: "20px",
+            right: "20px",
+            padding: "8px 12px",
+            cursor: "pointer",
+            border: "none",
+          }}
+        >
+          {isLoggedIn ? "Login" : "Logout"}
+        </button>     
       </header>
 
       <div className="container">
@@ -139,6 +154,7 @@ const handleLogout = () => {
             <h2>Add New Recipe</h2>
 
             {error && <div className="error-message">{error}</div>}
+            {message && !error && <div className="status-message">{message}</div>}
 
             {/* File Upload */}
             <div className="upload-option">

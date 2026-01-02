@@ -17,8 +17,10 @@
   },
   "scripts": {
     "start": "serve -s build",
+    "start-local": "react-scripts start ",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test": "react-scripts start",
+    "test-local": "react-scripts test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {

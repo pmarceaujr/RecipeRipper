@@ -59,21 +59,7 @@ const formattedDate = new Date(recipe.created_at).toLocaleString("en-US", {
         <button
           onClick={handlePrint}
           title="Print this recipe"
-          style={{
-            padding: '8px 16px',
-            backgroundColor: '#4CAF50',
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '1rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            transition: 'background-color 0.2s'
-          }}
-          onMouseOver={e => e.currentTarget.style.backgroundColor = '#45a049'}
-          onMouseOut={e => e.currentTarget.style.backgroundColor = '#4CAF50'}
+          className='print-button'
         >
           🖨️ Print
         </button>
