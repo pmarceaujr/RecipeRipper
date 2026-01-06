@@ -29,18 +29,18 @@ export default function LandingPage() {
           Register
         </button>
         </div>
-        <div >
+        <div > {/* stuffing div */}
           <p>We "rip" the key content from the recipes you love and remove all the "stuffing."</p>
 
-        </div>        
-        {/* Video placeholder */}
-        <div style={{ maxWidth: '70%',  margin: '0 auto',  padding: '20px',}}>
+          {/* </div>         */}
+          {/* Video placeholder */}
+          <div className="video-grid">
 
-          {/* Main container with two columns */}
-          <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '32px', alignItems: 'start',}}>
-            {/* Left column */}
-            <div style={{ textAlign: 'center' }}>
-              <h3 style={{ 
+            {/* Main container with two columns */}
+            <div className="video-column">
+              {/* Left column */}
+
+              <h3 style={{
                 marginBottom: '12px',
                 fontSize: '1.4rem',
                 fontWeight: '400',
@@ -49,23 +49,24 @@ export default function LandingPage() {
               </h3>
 
 
-              <video width="100%"  autoPlay loop muted playsInline
-                style={{ 
-                borderRadius: '12px',
-                boxShadow: '0 8px 25px rgba(0,0,0,0.25)',
-                width: '100%',
-                maxWidth: '500px',
-                height: 'auto',
-                display: 'block',
-                margin: '0 auto'
-              }}>
+              <video width="100%" autoPlay loop muted playsInline
+                style={{
+                  borderRadius: '12px',
+                  boxShadow: '0 8px 25px rgba(0,0,0,0.25)',
+                  width: '100%',
+                  maxWidth: '500px',
+                  height: 'auto',
+                  display: 'block',
+                  margin: '0 auto'
+                }}>
                 <source src="/assets/videos/blog_video.mp4" type="video/mp4" />
                 Your browser does not support the video tag.
               </video>
-  
+
             </div>
+            <div className="video-column">
             {/* Right column */}
-            <div style={{ textAlign: 'center' }}>
+
               <h3 style={{
                 marginBottom: '12px',
                 fontSize: '1.4rem',
@@ -74,24 +75,24 @@ export default function LandingPage() {
                 ....to this!
               </h3>
               <video width="100%" autoPlay loop muted playsInline
-                style={{ 
+                style={{
                 borderRadius: '12px',
                 boxShadow: '0 8px 25px rgba(0,0,0,0.25)',
                 width: '100%',
                 maxWidth: '500px',
                 height: 'auto',
                 display: 'block',
-                margin: '0 auto'                
+                margin: '0 auto'
               }}>
                 <source src="/assets/videos/Content_only.mp4" type="video/mp4" />
                 Your browser does not support the video tag.
               </video>
             </div>
-          </div> {/* End main container */}
-        </div> {/* End video placeholder */}
+          </div>
+        </div> {/* End main container */}
+      </div> {/* End video placeholder */}
 
+    </div> /* End stuffing div */
 
-      </div>
-    </div>
   );
 }

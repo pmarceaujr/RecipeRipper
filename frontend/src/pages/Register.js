@@ -48,7 +48,9 @@ export default function Register() {
   return (
     <div>
       <div className="container-login">
-        <Logo alt="Recipe Ripper Logo" width="500" />
+        <div className="login-logo">
+          <Logo alt="Recipe Ripper Logo" width="500" />
+        </div>
         <form className="login-form" onSubmit={handleSubmit}>
           <div>
           </div>

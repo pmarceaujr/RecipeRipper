@@ -131,21 +131,17 @@ const handleLogout = () => {
   return (
     <div className="App">
       <header className="App-header">
+        <div className="header-content">
+
         <h1>🍳 The Recipe Ripper Database</h1>
-        <button
-          onClick={isLoggedIn ? handleLogout : handleLogin}
-          style={{
-            position: "absolute",
-            top: "20px",
-            right: "20px",
-            padding: "8px 12px",
-            cursor: "pointer",
-            border: "none",
-          }}
+          <button className="auth-button"
+            onClick={isLoggedIn ? handleLogout : handleLogin}
         >
           {isLoggedIn ? "Login" : "Logout"}
-        </button>     
-      </header>
+          </button>
+        </div>
+      </header>   
+
 
       <div className="container">
         {/* LEFT SIDE */}
@@ -213,11 +209,11 @@ const handleLogout = () => {
               {recipes.map((recipe) => (
                 <div key={recipe.id} className="recipe-card">
                   <div className="recipe-header">
-                    <h3>
+                    <h4>
                       <Link to={`/recipe/${recipe.id}`}>
                         {recipe.title}
                       </Link>
-                    </h3>
+                    </h4>
 
 
                   </div>
