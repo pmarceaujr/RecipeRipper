@@ -26,8 +26,10 @@ def register():
     db.session.commit()
     return jsonify({'msg': 'Registered'}), 201
 
+
 @auth_bp.route('/login', methods=['POST'])
 def login():
+    print("Inside login function")
     data = request.json
     user = User.query.filter_by(email=data['userId']).first()
     if not user:

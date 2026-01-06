@@ -4,6 +4,7 @@ from app.config import *
 from flask import Flask
 from .extensions import db, jwt, migrate, bcrypt, cors
 from .auth.routes import auth_bp
+# from .auth.routes_secret_reset_pw import authreset_bp
 from .recipes.routes import recipes_bp
 
 def create_app():
@@ -53,23 +54,15 @@ def create_app():
         # 'SQLALCHEMY_ENGINE_OPTIONS': {'connect_args': {'sslmode': 'require'}} if 'DATABASE_URL' in os.environ else None,
     })
 
-    # ───────────────────────────────────────────────
-    # Option A – Most readable
-    print("┌──────────── Loaded config from────────────┐")
-    for key, value in sorted(app.config.items()):
-        if not key.isupper(): continue           # skip Flask internal stuff
-        print(f"│ {key: <28} : {value!r}")
-    print("└────────────────────────────────────────────────────────────┘")
+
 
     if os.environ.get('OPENAI_API_KEY') == None:
         os.environ['OPENAI_API_KEY'] = app.config.get('OPENAI_API_KEY')
 
-    print(f"'OPENAI_API_KEY': {os.environ.get('OPENAI_API_KEY')}")
 
  # Use Postgres on Heroku, SQLite locally
     # print(f"database url123: {DATABASE_URL}")
     DATABASE_URL = app.config.get('DATABASE_URL')
-    print(f"database url: {DATABASE_URL}")
 
     if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
         # Heroku provides "postgres://" but SQLAlchemy wants "postgresql://"
@@ -91,6 +84,7 @@ def create_app():
     # Register blueprints
     app.register_blueprint(recipes_bp, url_prefix='/api')
     app.register_blueprint(auth_bp, url_prefix='/auth')    
+    app.register_blueprint(authreset_bp, url_prefix='/authreset') 
 
     # Home route
     @app.route('/health')
@@ -105,5 +99,16 @@ def create_app():
     @app.errorhandler(500)
     def internal_error(e):
         return {"error": "Internal server error"}, 500
+
+
+    # ───────────────────────────────────────────────
+    # Option A – Most readable
+    print("┌──────────── Loaded config from────────────┐")
+    for key, value in sorted(app.config.items()):
+        if not key.isupper(): continue           # skip Flask internal stuff
+        print(f"│ {key: <28} : {value!r}")
+    print("└────────────────────────────────────────────────────────────┘")   
+    print(f"'OPENAI_API_KEY': {os.environ.get('OPENAI_API_KEY')}")     
+    print(f"database url: {DATABASE_URL}")    
 
     return app

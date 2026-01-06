@@ -8,4 +8,5 @@ __pycache__/
 backend/instance/
 instance/
 *.db
+backend/app/auth/backend/app/auth/routes_reset_pw.py
 
