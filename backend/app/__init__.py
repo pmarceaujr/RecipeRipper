@@ -84,7 +84,7 @@ def create_app():
     # Register blueprints
     app.register_blueprint(recipes_bp, url_prefix='/api')
     app.register_blueprint(auth_bp, url_prefix='/auth')    
-    app.register_blueprint(authreset_bp, url_prefix='/authreset') 
+    # app.register_blueprint(authreset_bp, url_prefix='/authreset') 
 
     # Home route
     @app.route('/health')
