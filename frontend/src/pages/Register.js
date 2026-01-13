@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import ReCAPTCHA from 'react-google-recaptcha';
 import { useNavigate } from "react-router-dom";
 import Logo from "./ImportLogo";
 
@@ -12,6 +13,7 @@ export default function Register() {
   const [lastname, setLastname] = useState(""); 
   const [message, setMessage] = useState(null);
   const [confirmPassword, setConfirmPassword] = useState("");
+  const recaptchaRef = useRef(null);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -21,12 +23,25 @@ export default function Register() {
       setMessage("Passwords do not match.");
       return;
     }
+
     setMessage(null); // Clear previous messages
+
+    // Execute reCAPTCHA to get a token
+    const token = await recaptchaRef.current.executeAsync();
+    if (!token) {
+      setMessage("reCAPTCHA verification failed. Please try again.");
+      return;
+    }
+
+    // Add token to form data
+    // formData.recaptchaToken = token;    
+
+
     try {
       const res = await fetch(`${API_URL}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, username, password, firstname, lastname }),
+        body: JSON.stringify({ email, username, password, firstname, lastname, recaptchaToken: token }),
       });
 
       const data = await res.json(); // ← very important!
@@ -128,6 +143,15 @@ export default function Register() {
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
           </div>
+          {/* Add invisible reCAPTCHA */}
+          <div>
+
+          </div>
+          <ReCAPTCHA
+            ref={recaptchaRef}
+            size="invisible"
+            sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY} //"6LdKckksAAAAAINokWHMXtuUwFXZAKj_78FKEYxe" //{process.env.REACT_APP_RECAPTCHA_SITE_KEY}  // See below for env setup
+          />
           <div className="login-div">
             <button type="submit">Register</button>
           </div>
@@ -136,3 +160,4 @@ export default function Register() {
     </div>
   );
 }
+
