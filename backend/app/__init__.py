@@ -1,19 +1,18 @@
 # app/__init__.py
 import os
 from app.config import *
+from app import models
 from flask import Flask
+from dotenv import load_dotenv
 from .extensions import db, jwt, migrate, bcrypt, cors
-from .auth.routes import auth_bp
-# from .auth.routes_secret_reset_pw import authreset_bp
-from .recipes.routes import recipes_bp
+
+load_dotenv() 
 
 def create_app():
     # Create app with instance folder support
     app = Flask(__name__, instance_relative_config=True)
 
     # Read environment variable (default to "development")
-
-    print(f"DB URL: {os.environ.get('DATABASE_URL')} or {app.config.get('DATABASE_URL')}")
     env = os.getenv("FLASK_ENV", "development")
     if env == "production":
         app.config.from_object(ProductionConfig)
@@ -54,12 +53,17 @@ def create_app():
         # 'SQLALCHEMY_ENGINE_OPTIONS': {'connect_args': {'sslmode': 'require'}} if 'DATABASE_URL' in os.environ else None,
     })
 
+    # ───────────────────────────────────────────────
+    # Option A – Most readable
+    print("┌──────────── Loaded config from────────────┐")
+    for key, value in sorted(app.config.items()):
+        if not key.isupper(): continue           # skip Flask internal stuff
+        print(f"│ {key: <28} : {value!r}")
+    print("└────────────────────────────────────────────────────────────┘")   
+    print(f"'OPENAI_API_KEY': {app.config.get('OPENAI_API_KEY')}")     
+    print(f"database url: {app.config.get('DATABASE_URL')}") 
 
-
-    if os.environ.get('OPENAI_API_KEY') == None:
-        os.environ['OPENAI_API_KEY'] = app.config.get('OPENAI_API_KEY')
-
-
+    # ───────────────────────────────────────────────
  # Use Postgres on Heroku, SQLite locally
     # print(f"database url123: {DATABASE_URL}")
     DATABASE_URL = app.config.get('DATABASE_URL')
@@ -81,6 +85,10 @@ def create_app():
     # Ensure upload folder exists
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
+    # Import blueprints
+    from .auth.routes import auth_bp
+    # from .auth.routes_secret_reset_pw import authreset_bp
+    from .recipes.routes import recipes_bp
     # Register blueprints
     app.register_blueprint(recipes_bp, url_prefix='/api')
     app.register_blueprint(auth_bp, url_prefix='/auth')    
@@ -101,14 +109,6 @@ def create_app():
         return {"error": "Internal server error"}, 500
 
 
-    # ───────────────────────────────────────────────
-    # Option A – Most readable
-    print("┌──────────── Loaded config from────────────┐")
-    for key, value in sorted(app.config.items()):
-        if not key.isupper(): continue           # skip Flask internal stuff
-        print(f"│ {key: <28} : {value!r}")
-    print("└────────────────────────────────────────────────────────────┘")   
-    print(f"'OPENAI_API_KEY': {os.environ.get('OPENAI_API_KEY')}")     
-    print(f"database url: {DATABASE_URL}")    
+   
 
     return app

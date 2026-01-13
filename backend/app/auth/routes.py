@@ -4,6 +4,8 @@ from ..extensions import db
 from ..models.user import User
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from flask_mail import Mail, Message  # For reset
+import os
+import requests
 
 auth_bp = Blueprint('auth', __name__)
 mail = Mail()  # Init in factory if needed
@@ -11,6 +13,25 @@ mail = Mail()  # Init in factory if needed
 @auth_bp.route('/register', methods=['POST'])
 def register():
     data = request.json
+
+    # Extract token
+    token = data.get('recaptchaToken')
+    if not token:
+        return jsonify({'error': 'Missing reCAPTCHA token'}), 400    
+
+    # Verify with Google
+    secret_key = os.getenv('RECAPTCHA_SECRET_KEY')
+    verify_url = 'https://www.google.com/recaptcha/api/siteverify'
+    response = requests.post(verify_url, data={
+        'secret': secret_key,
+        'response': token,
+    })
+    result = response.json()
+
+    if not result.get('success') or result.get('score', 0) < 0.5:  # Score threshold: 0.5 is medium; adjust if needed (1.0 = human, 0.0 = bot)
+        return jsonify({'error': 'reCAPTCHA verification failed. Are you a bot?'}), 400
+
+
     existing_user = User.query.filter((User.username == data['username']) | (User.email == data['email'])).first()
     if existing_user:
         if existing_user.email == data['email']:
