@@ -16,6 +16,12 @@ AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_DEFAULT_REGION = os.getenv("AWS_DEFAULT_REGION")
 S3_BUCKET = os.getenv("S3_BUCKET")
 
+# OpenAI API KEY
+openai.api_key = os.getenv("OPENAI_API_KEY")
+openai.api_key = os.getenv('OPENAI_API_KEY')
+if not openai.api_key:
+    print("Warning: OPENAI_API_KEY is not set in environment variables.")
+
 # Initialize AWS clients
 s3 = boto3.client(
     "s3",
