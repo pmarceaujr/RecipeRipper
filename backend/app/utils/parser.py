@@ -21,6 +21,8 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 openai.api_key = os.getenv('OPENAI_API_KEY')
 if not openai.api_key:
     print("Warning: OPENAI_API_KEY is not set in environment variables.")
+else:
+    print(f"OPENAI_API_KEY found: ...{openai.api_key[-10:]}")  # Print first 10 chars for verification
 
 # Initialize AWS clients
 s3 = boto3.client(
