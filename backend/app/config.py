@@ -13,18 +13,18 @@ class BaseConfig:
 class DevelopmentConfig(BaseConfig):
     DEBUG = True
     DATABASE_URL = "sqlite:///recipes.db"
-    # SECRET_KEY="super-secret-key123"   
-    # JWT_SECRET_KEY="this-is-the-real-super-secret-key123"
-    # JWT_ALGORITHM="HS256"
+    # SECRET_KEY=""   
+    # JWT_SECRET_KEY=""
+    # JWT_ALGORITHM=""
     # JWT_ACCESS_TOKEN_EXPIRES=3600  # 1 hour in seconds
-    # OPENAI_API_KEY="123sk-proj-4IQsDF3QHY4GGxJoDz2zEZ3RLVEaC2Cqmqx8jgNeKX1mrzpPlhA6tnH5WTSKz3UwpcAeFq1Ym2T3BlbkFJr84hQGNSY8k2g38OL9vrH9IHcl0wDquwaUv2NrRuG0t3EMEGEj8AAKpnzZ1CjUwEKkfxxvSi8A"
+    # OPENAI_API_KEY=""
     # PORT=5000
     # UPLOAD_FOLDER="/uploads123"
-    # AWS_ACCESS_KEY_ID="AKIA5VLOXNVZSXJJTEWU123"
-    # AWS_SECRET_ACCESS_KEY="KUjwPFNON5tGdHJ3mu/GMwAJanUZm4wm42dFoU7U123"
-    # AWS_DEFAULT_REGION="us-east-1123"
-    # S3_BUCKET="recipe-database-text-extractor-bucket123"
-    # DATABASE_URL="123postgres://u7nvu2k5qfam92:p743e7d65c3bb14d9752f8b326e789e483acd51dce2680699e3f3c59194653c3e@ccu6unqr99fgui.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com:5432/d138rer8c2bapn"
+    # AWS_ACCESS_KEY_ID=""
+    # AWS_SECRET_ACCESS_KEY=""
+    # AWS_DEFAULT_REGION=""
+    # S3_BUCKET=""
+    # DATABASE_URL=""
 
 
 class ProductionConfig(BaseConfig):
