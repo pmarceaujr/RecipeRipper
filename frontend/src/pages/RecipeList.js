@@ -26,12 +26,18 @@ export default function RecipeList() {
 
 
   useEffect(() => {
+    applyFilter();
+  }, [searchValue, searchCategory, recipes]);   // ← add this if you want live filtering
+
+  useEffect(() => {
     if (!searchCategory) {
       setAvailableValues([]);
       setSearchValue('');
       setFilteredRecipes(null);
       return;
     }
+
+
 
     const loadValues = async () => {
       setLoadingValues(true);
@@ -60,11 +66,15 @@ export default function RecipeList() {
 
 
   const applyFilter = () => {
-    if (!searchCategory || !searchValue) return;
-
-    const filtered = recipes.filter(r =>
-      String(r[searchCategory]).toLowerCase() === searchValue.toLowerCase()
-    );
+    if (!searchCategory || !searchValue) {
+      setFilteredRecipes(null); // show all
+      return;
+    }
+    const filtered = recipes.filter(recipe => {
+      const value = recipe[searchCategory];
+      if (value === undefined || value === null) return false;
+      return String(value).toLowerCase() === searchValue.toLowerCase();
+    });
 
     setFilteredRecipes(filtered);
   };  
@@ -272,6 +282,7 @@ const handleLogout = () => {
                   value={searchCategory}
                   onChange={(e) => {
                     setSearchCategory(e.target.value);
+                    setSearchValue('');
                     setSearchValue(''); // reset second field when category changes
                   }}
                   style={{ padding: '0.5rem', minWidth: '140px', fontSize: '1rem' }}
@@ -299,26 +310,18 @@ const handleLogout = () => {
                   ))}
                 </select>
 
-                <button
-                  onClick={() => applyFilter()}
-                  disabled={!searchCategory || !searchValue}
-                  style={{ width: '80px' }}
-                >
-                  Filter
-                </button>
-
-                {(searchCategory || searchValue) && (
+                {/* {(searchCategory || searchValue) && (
                   <button
                     onClick={() => {
                       setSearchCategory('');
                       setSearchValue('');
-                      setFilteredRecipes(recipes); // or just rely on empty filter
+                      setFilteredRecipes(null); // or just rely on empty filter
                     }}
                     style={{ background: '#f44336', color: 'white', width: '80px' }}
                   >
                     Clear
-                  </button>
-                )}
+                  </button> */}
+                {/* )} */}
               </div>
               {/* ←─  New search controls end here  ←─ */}
 
@@ -328,7 +331,15 @@ const handleLogout = () => {
             {loading && <p className="loading">Loading...</p>}
 
             <div className="recipes-grid">
-              {recipes.map((recipe) => (
+              {/* Add this line for better UX */}
+              {filteredRecipes !== null && (
+                <p style={{ color: "#555", marginBottom: "1rem" }}>
+                  Showing {filteredRecipes.length} filtered recipe(s)
+                  {filteredRecipes.length === 0 && " — no matches"}
+                </p>
+              )}
+
+              {(filteredRecipes !== null ? filteredRecipes : recipes).map((recipe) => (
                 <div key={recipe.id} className="recipe-card">
                   <div className="recipe-header">
                     <h4>
