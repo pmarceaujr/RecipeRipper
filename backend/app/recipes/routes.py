@@ -122,9 +122,7 @@ def upload_recipe():
                 text = parse_from_file(file_path, filename)
 
             # Parse into structured recipe
-            recipe_data = parse_recipe_text(
-                text, recipe_source=filename, is_file=True
-            )
+            recipe_data = parse_recipe_text(text, recipe_source=filename, is_file=True)
 
             # Save to DB
             recipe_id = save_recipe(recipe_data, user_id=user_id)
@@ -164,9 +162,7 @@ def add_from_url():
         if not scraped_text.strip():
             return jsonify({"error": "Could not extract text from URL"}), 400
 
-        recipe_data = parse_recipe_text(
-            scraped_text, recipe_source=url, is_file=False
-        )
+        recipe_data = parse_recipe_text(scraped_text, recipe_source=url, is_file=False)
         print("Parsed recipe data:")
         recipe_id = save_recipe(recipe_data, user_id=user_id)
 
