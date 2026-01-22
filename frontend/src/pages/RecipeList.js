@@ -235,7 +235,7 @@ const handleLogout = () => {
                   {recipe.recipe_source && (
                     <p className="recipe-source">
                       <strong>Source:</strong>{" "}
-                      {recipe.is_url === "1" ? (
+                      {recipe.is_url === 1 ? (
                         recipe.recipe_source
                       ) : (
                         <a
