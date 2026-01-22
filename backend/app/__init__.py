@@ -63,8 +63,8 @@ def create_app():
         else:
             print(f"│ {key: <28} : {value!r}")
     print("└────────────────────────────────────────────────────────────┘")   
-    print(f"'OPENAI_API_KEY': {app.config.get('OPENAI_API_KEY')[-10:]} (last 10 chars shown)")     
-    print(f"database url: {app.config.get('DATABASE_URL')}") 
+    # print(f"'OPENAI_API_KEY': {app.config.get('OPENAI_API_KEY')[-10:]} (last 10 chars shown)")     
+    # print(f"database url: {app.config.get('DATABASE_URL')}") 
 
     # ───────────────────────────────────────────────
  # Use Postgres on Heroku, SQLite locally
