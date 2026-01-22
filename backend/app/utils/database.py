@@ -86,7 +86,7 @@ def get_all_recipes(user_id):
     print("Inside get_all_recipes function")
     # user_id_= int(user_id)
     try:
-        recipe_data = Recipe.query.filter_by(user_id=user_id)
+        recipe_data = Recipe.query.filter_by(user_id=user_id).order_by(Recipe.created_at.desc())
         if recipe_data is not None:
             result = []
             for recipe in recipe_data:
