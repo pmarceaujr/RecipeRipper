@@ -1,16 +1,16 @@
 {
   "files": {
     "main.css": "/static/css/main.0ac10a1a.css",
-    "main.js": "/static/js/main.fd41fcee.js",
+    "main.js": "/static/js/main.d788352c.js",
     "static/js/453.20359781.chunk.js": "/static/js/453.20359781.chunk.js",
     "static/media/recipe_ripper_logo.png": "/static/media/recipe_ripper_logo.60844999518ef16d7032.png",
     "index.html": "/index.html",
     "main.0ac10a1a.css.map": "/static/css/main.0ac10a1a.css.map",
-    "main.fd41fcee.js.map": "/static/js/main.fd41fcee.js.map",
+    "main.d788352c.js.map": "/static/js/main.d788352c.js.map",
     "453.20359781.chunk.js.map": "/static/js/453.20359781.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.0ac10a1a.css",
-    "static/js/main.fd41fcee.js"
+    "static/js/main.d788352c.js"
   ]
 }
