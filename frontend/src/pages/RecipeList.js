@@ -18,6 +18,66 @@ export default function RecipeList() {
   const { logout } = useAuth();
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
+  const [searchCategory, setSearchCategory] = useState("");
+  const [searchValue, setSearchValue] = useState("");
+  const [availableValues, setAvailableValues] = useState([]);
+  const [loadingValues, setLoadingValues] = useState(false);
+  const [filteredRecipes, setFilteredRecipes] = useState([]);
+
+
+  useEffect(() => {
+    applyFilter();
+  }, [searchValue, searchCategory, recipes]);   // ← add this if you want live filtering
+
+  useEffect(() => {
+    if (!searchCategory) {
+      setAvailableValues([]);
+      setSearchValue('');
+      setFilteredRecipes(null);
+      return;
+    }
+
+
+
+    const loadValues = async () => {
+      setLoadingValues(true);
+      try {
+        // Option A: Ask backend for distinct values (recommended long-term)
+        // const res = await api.get(`/api/recipes/distinct/${searchCategory}`);
+
+        // Option B: For now — extract from already loaded recipes (quick & works without backend change)
+        const unique = [...new Set(
+          recipes
+            .map(r => r[searchCategory])
+            .filter(Boolean)
+        )].sort();
+
+        setAvailableValues(unique);
+      } catch (err) {
+        console.error(err);
+        setAvailableValues([]);
+      } finally {
+        setLoadingValues(false);
+      }
+    };
+
+    loadValues();
+  }, [searchCategory, recipes]);
+
+
+  const applyFilter = () => {
+    if (!searchCategory || !searchValue) {
+      setFilteredRecipes(null); // show all
+      return;
+    }
+    const filtered = recipes.filter(recipe => {
+      const value = recipe[searchCategory];
+      if (value === undefined || value === null) return false;
+      return String(value).toLowerCase() === searchValue.toLowerCase();
+    });
+
+    setFilteredRecipes(filtered);
+  };  
 
   useEffect(() => {
     fetchRecipes();
@@ -201,12 +261,85 @@ const handleLogout = () => {
         {/* RIGHT SIDE */}
         <div className="right">
           <div className="recipe-section">
-            <h2>My Recipes ({recipes.length})</h2>
+            {/* Changed: header + search on one line */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '1.2rem',
+                flexWrap: 'wrap',
+                gap: '1rem'
+              }}
+            >
+              <h2 style={{ margin: 0 }}>
+                My Recipes ({recipes.length})</h2>
+
+              {/* ──→  New search controls start here  ──→ */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+
+                <select
+                  value={searchCategory}
+                  onChange={(e) => {
+                    setSearchCategory(e.target.value);
+                    setSearchValue('');
+                    setSearchValue(''); // reset second field when category changes
+                  }}
+                  style={{ padding: '0.5rem', minWidth: '140px', fontSize: '1rem' }}
+                >
+                  <option value="">All categories</option>
+                  <option value="course">Course</option>
+                  <option value="cuisine">Cuisine</option>
+                  <option value="primary_ingredient">Main Ingredient</option>
+                  {/* Add more filter types later if needed */}
+                </select>
+
+                <select
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                  disabled={!searchCategory}
+                  style={{ padding: '0.5rem', minWidth: '180px', fontSize: '1rem' }}
+                >
+                  <option value="">
+                    {loadingValues ? 'Loading...' : 'Select value...'}
+                  </option>
+                  {availableValues.map((val) => (
+                    <option key={val} value={val}>
+                      {val}
+                    </option>
+                  ))}
+                </select>
+
+                {/* {(searchCategory || searchValue) && (
+                  <button
+                    onClick={() => {
+                      setSearchCategory('');
+                      setSearchValue('');
+                      setFilteredRecipes(null); // or just rely on empty filter
+                    }}
+                    style={{ background: '#f44336', color: 'white', width: '80px' }}
+                  >
+                    Clear
+                  </button> */}
+                {/* )} */}
+              </div>
+              {/* ←─  New search controls end here  ←─ */}
+
+            </div>            
+
 
             {loading && <p className="loading">Loading...</p>}
 
             <div className="recipes-grid">
-              {recipes.map((recipe) => (
+              {/* Add this line for better UX */}
+              {filteredRecipes !== null && (
+                <p style={{ color: "#555", marginBottom: "1rem" }}>
+                  Showing {filteredRecipes.length} filtered recipe(s)
+                  {filteredRecipes.length === 0 && " — no matches"}
+                </p>
+              )}
+
+              {(filteredRecipes !== null ? filteredRecipes : recipes).map((recipe) => (
                 <div key={recipe.id} className="recipe-card">
                   <div className="recipe-header">
                     <h4>
@@ -235,7 +368,7 @@ const handleLogout = () => {
                   {recipe.recipe_source && (
                     <p className="recipe-source">
                       <strong>Source:</strong>{" "}
-                      {recipe.is_url === "1" ? (
+                      {recipe.is_url === 1 ? (
                         recipe.recipe_source
                       ) : (
                         <a
