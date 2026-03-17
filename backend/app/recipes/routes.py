@@ -1,4 +1,6 @@
 # app/routes/recipes.py
+from requests import HTTPError
+
 from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 import os
@@ -175,6 +177,13 @@ def add_from_url():
             "recipe_id": recipe_id,
             "title": recipe_data.get('title', 'Untitled')
         })
+    except HTTPError as http_err:
+            status_code = http_err.response.status_code
+            if status_code == 402:
+                # Payment Required — most likely quota/credits exhausted on your scraping service
+                print(f"Payment Required (402) — API/scraping service blocked")
+                return jsonify({"error": "Scraping blocked, print to PDF and upload."}), 402
+
 
     except Exception as e:
         current_app.logger.error(f"URL import failed: {e}")
