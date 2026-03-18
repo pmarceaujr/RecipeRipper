@@ -182,5 +182,8 @@ def add_from_url():
 
 
     except Exception as e:
+        if 'Failed to scrape URL: 402 Client Error:' in str(e):
+            print(f"Payment Required (402) — API/scraping service blocked")
+            return jsonify({"error": "Scraping blocked, print to PDF and upload."}), 402
         current_app.logger.error(f"URL import failed: {e}")
         return jsonify({"error": "Failed to import from URL"}), 500
