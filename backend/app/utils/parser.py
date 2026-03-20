@@ -121,7 +121,7 @@ def extract_text_from_image(file_path):
         }.get(image_extension, 'image/jpeg')
         
         # Use OpenAI Vision to extract text
-        response = openai.chat.completions.create(
+        stream = openai.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {
