@@ -126,6 +126,7 @@ def upload_recipe():
 
             print(f"Extracted text: {text}")  # Log first 200 chars of extracted text for debugging
             # Parse into structured recipe
+            print("Parsing recipe from image")
             recipe_data = parse_recipe_text(text, recipe_source=filename, is_file=True)
 
             # Save to DB
@@ -170,7 +171,7 @@ def add_from_url():
         scraped_text = scrape_url(url)
         if not scraped_text.strip():
             return jsonify({"error": "Could not extract text from URL"}), 400
-
+        print("Parsing recipe from URL")
         recipe_data = parse_recipe_text(scraped_text, recipe_source=url, is_file=False)
         print("Parsed recipe data:")
         recipe_id = save_recipe(recipe_data, user_id=user_id)
