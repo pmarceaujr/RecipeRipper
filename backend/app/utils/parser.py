@@ -140,10 +140,20 @@ def extract_text_from_image(file_path):
                     ]
                 }
             ],
-            max_tokens=2000
+            max_tokens=2000,
+            stream=True
         )
+
+        # Collect all chunks into full text
+        full_text = ""
+        for chunk in stream:
+            if chunk.choices[0].delta.content is not None:
+                full_text += chunk.choices[0].delta.content
         
-        return response.choices[0].message.content
+        return full_text
+
+
+        # return response.choices[0].message.content
         
     except Exception as e:
         raise Exception(f"Failed to extract text from image: {str(e)}")
