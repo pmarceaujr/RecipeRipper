@@ -93,6 +93,7 @@ def delete_recipe(recipe_id):
 @jwt_required()
 def upload_recipe():
     """Upload and parse a recipe file"""
+    print("Adding recipe from URL")
     try:
         user_id = get_jwt_identity()
         print(f"User ID: {user_id}")
