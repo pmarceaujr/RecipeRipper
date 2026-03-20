@@ -135,17 +135,22 @@ def upload_recipe():
                 "title": recipe_data.get('title', 'Untitled')
             })
 
-        finally:
-            # Always clean up uploaded file
-            try:
-                if os.path.exists(file_path):
-                    os.remove(file_path)
-            except Exception as cleanup_error:
-                current_app.logger.warning(f"Failed to delete temp file {file_path}: {cleanup_error}")
+
+        except Exception as e:
+            current_app.logger.error(f"Upload failed: {e}")
+            return jsonify({"error": "Failed to extract text from file"}), 500
 
     except Exception as e:
-        current_app.logger.error(f"Upload failed: {e}")
-        return jsonify({"error": "Failed to process upload"}), 500
+            current_app.logger.error(f"Upload failed: {e}")
+            return jsonify({"error": "Failed to process upload"}), 500        
+    
+    finally:
+        # Always clean up uploaded file
+        try:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+        except Exception as cleanup_error:
+            current_app.logger.warning(f"Failed to delete temp file {file_path}: {cleanup_error}")    
 
 @recipes_bp.route('/recipes/from-url', methods=['POST'])
 @jwt_required()
