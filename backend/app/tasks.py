@@ -7,7 +7,20 @@ from app.models import Recipe, db  # Adjust to your actual DB models/session
 from flask import current_app
 
 # Connect to Redis using Heroku-provided URL
-redis_conn = Redis.from_url(os.getenv('REDIS_URL', 'redis://localhost:6379'))
+# Use REDIS_URL if set, fallback to REDIS_TLS_URL (for safety during transition)
+redis_url = os.environ.get('REDIS_URL') or os.environ.get('REDIS_TLS_URL')
+if not redis_url:
+    raise RuntimeError("No Redis URL found in config vars — check heroku config")
+
+redis_conn = Redis.from_url(redis_url)
+
+# Test ping (add this in app init or a debug route)
+try:
+    redis_conn.ping()
+    current_app.logger.info("Redis connection successful")
+except Exception as e:
+    current_app.logger.error(f"Redis ping failed: {e}")
+    raise  # or handle gracefully
 queue = Queue(connection=redis_conn, default_timeout=300)  # 5 min timeout per job
 
 def process_recipe_upload(user_id: int, file_path: str, filename: str):
