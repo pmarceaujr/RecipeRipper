@@ -21,7 +21,7 @@ import uuid
 
 import redis
 
-_redis = redis.from_url(os.environ["REDIS_URL"], decode_responses=True)
+_redis = redis.from_url(os.environ["REDIS_URL"], decode_responses=True, ssl_cert_reqs=None)
 
 # How long (seconds) a completed or failed job result lives in Redis.
 # Pending jobs also use this TTL — if the dyno dies mid-job the record
