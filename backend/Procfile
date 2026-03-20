@@ -1,2 +1,2 @@
-web: gunicorn "app:create_app()" --timeout 25
+web: gunicorn "app:create_app()" 
 worker: rq worker --with-scheduler
