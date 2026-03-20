@@ -142,7 +142,7 @@ def extract_text_from_image(file_path):
             ],
             max_tokens=2000
         )
-        
+        print(f"OpenAI Vision response: {response}")  # Debugging line
         return response.choices[0].message.content
         
     except Exception as e:
