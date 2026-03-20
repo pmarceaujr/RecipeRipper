@@ -123,6 +123,7 @@ def upload_recipe():
             else:  # .txt
                 text = parse_from_file(file_path, filename)
 
+            print(f"Extracted text: {text}")  # Log first 200 chars of extracted text for debugging
             # Parse into structured recipe
             recipe_data = parse_recipe_text(text, recipe_source=filename, is_file=True)
 
