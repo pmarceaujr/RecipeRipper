@@ -362,7 +362,7 @@ def parse_recipe_text(text, recipe_source=None, is_file=True):
         # {text}
         # """
 
-        print("Prompt....")  # Debugging line
+        print(f"Prompt: {prompt}")  # Debugging line
         response = openai.chat.completions.create(
             model="gpt-4o-mini",  # Fast and accurate - or use "gpt-4o" for best results
             messages=[
