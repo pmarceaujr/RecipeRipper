@@ -1,5 +1,6 @@
 # app/tasks.py
 import os
+import uuid
 from rq import Queue
 from redis import Redis
 from app.utils.parser import extract_text_from_image, extract_text_from_pdf, parse_from_file, parse_recipe_text
