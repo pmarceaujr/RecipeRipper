@@ -25,9 +25,8 @@ def get_recipes():
     print("Fetching all recipes")
     """Get all recipes"""
     try:
-        
         user_id = get_jwt_identity()
-        print(f"User ID: {user_id}")
+        # print(f"User ID: {user_id}")
         recipes = get_all_recipes(user_id)
         if not recipes or len(recipes) == 0:
             return jsonify({"msg": "You currently do not have any recipes saved."}), 204         
@@ -43,7 +42,7 @@ def get_recipe(recipe_id):
     """Get a single recipe by ID"""
     try:
         user_id = get_jwt_identity()
-        print(f"User ID: {user_id}")
+        # print(f"User ID: {user_id}")
         recipe = get_recipe_by_id(recipe_id, user_id)
         if not recipe:
             return jsonify({"error": "Recipe not found"}), 404
@@ -59,7 +58,7 @@ def update_recipe(recipe_id):
     """Update a recipe"""
     try:
         user_id = get_jwt_identity()
-        print(f"User ID: {user_id}")        
+        # print(f"User ID: {user_id}")        
         data = request.get_json()
         if not data:
             return jsonify({"error": "No data provided"}), 400
@@ -74,11 +73,11 @@ def update_recipe(recipe_id):
 @recipes_bp.route('/recipe/<int:recipe_id>', methods=['DELETE'])
 @jwt_required()
 def delete_recipe(recipe_id):
-    """Delete a recipe"""
     print("Deleting recipe")
+    """Delete a recipe"""
     try:
         user_id = get_jwt_identity()
-        print(f"User ID: {user_id}")
+        # print(f"User ID: {user_id}")
         recipe = Recipe.query.filter_by(id=recipe_id, user_id=user_id).first()
         if not recipe:
             return jsonify({"error": "Recipe not found"}), 404
@@ -92,18 +91,16 @@ def delete_recipe(recipe_id):
 @recipes_bp.route('/recipes/upload', methods=['POST'])
 @jwt_required()
 def upload_recipe():
+    print("Adding recipe from file")
     """Upload and parse a recipe file"""
-    print("Adding recipe from URL")
     try:
         user_id = get_jwt_identity()
-        print(f"User ID: {user_id}")
+        # print(f"User ID: {user_id}")
         if 'file' not in request.files:
             return jsonify({"error": "No file provided"}), 400
-
         file = request.files['file']
         if file.filename == '':
             return jsonify({"error": "No file selected"}), 400
-
         if not allowed_file(file.filename):
             return jsonify({
                 "error": f"Unsupported file type. Allowed: {', '.join(ALLOWED_EXTENSIONS)}"
@@ -124,9 +121,9 @@ def upload_recipe():
             else:  # .txt
                 text = parse_from_file(file_path, filename)
 
-            print(f"Extracted text: {text}")  # Log first 200 chars of extracted text for debugging
+            # print(f"Extracted text: {text}")  # Log first 200 chars of extracted text for debugging
             # Parse into structured recipe
-            print("Parsing recipe from image")
+            # print("Parsing recipe from image")
             recipe_data = parse_recipe_text(text, recipe_source=filename, is_file=True)
 
             # Save to DB
@@ -142,11 +139,9 @@ def upload_recipe():
         except Exception as e:
             current_app.logger.error(f"Upload failed: {e}")
             return jsonify({"error": "Failed to extract text from file"}), 500
-
     except Exception as e:
             current_app.logger.error(f"Upload failed: {e}")
             return jsonify({"error": "Failed to process upload"}), 500        
-    
     finally:
         # Always clean up uploaded file
         try:
@@ -164,16 +159,14 @@ def add_from_url():
         user_id = get_jwt_identity()
         data = request.get_json()
         url = data.get('url')
-
         if not url:
             return jsonify({"error": "No URL provided"}), 400
-
         scraped_text = scrape_url(url)
         if not scraped_text.strip():
             return jsonify({"error": "Could not extract text from URL"}), 400
-        print("Parsing recipe from URL")
+        # print("Parsing recipe from URL")
         recipe_data = parse_recipe_text(scraped_text, recipe_source=url, is_file=False)
-        print("Parsed recipe data:")
+        # print("Parsed recipe data:")
         recipe_id = save_recipe(recipe_data, user_id=user_id)
 
         return jsonify({

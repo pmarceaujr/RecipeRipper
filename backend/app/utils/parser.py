@@ -66,8 +66,8 @@ def scrape_url(url):
         raise Exception(f"Failed to scrape URL: {str(e)}")
 
 def extract_text_from_pdf(file_path, filename):
-    """Extract text from PDF file"""
     print("Initializing PDF text extraction...")
+    """Extract text from PDF file"""
     try:
         # Check if PDF has embedded text
         # pdf_path = Path(pdf_path)
@@ -75,8 +75,8 @@ def extract_text_from_pdf(file_path, filename):
         if any(page.extract_text() for page in reader.pages):
             print("Text-based PDF detected")
             # reader = PdfReader(file_path)
-            print("read pdf")
-            print(f"Number of pages: {len(reader.pages)}")
+            # print("read pdf")
+            # print(f"Number of pages: {len(reader.pages)}")
             text = ""
             for page in reader.pages:
                 text += page.extract_text() + "\n"
@@ -84,9 +84,9 @@ def extract_text_from_pdf(file_path, filename):
             return text
         else:
             print("Scanned PDF detected — running Textract OCR")
-            print(f"Uploading {file_path} to S3...")
-            print(f"S3 bucket: {S3_BUCKET}")
-            print(f"File name: {filename}")
+            # print(f"Uploading {file_path} to S3...")
+            # print(f"S3 bucket: {S3_BUCKET}")
+            # print(f"File name: {filename}")
             # Upload PDF to S3
             s3.upload_file(str(file_path), S3_BUCKET, filename)
 
@@ -106,6 +106,7 @@ def extract_text_from_pdf(file_path, filename):
         raise Exception(f"Failed to extract text from PDF: {str(e)}")
 
 def extract_text_from_image(file_path):
+    print("Initializing image text extraction...")
     """Extract text from image using OpenAI Vision API"""
     try:
         # Read and encode image
@@ -142,7 +143,7 @@ def extract_text_from_image(file_path):
             ],
             max_tokens=2000
         )
-        print(f"OpenAI Vision response: {response}")  # Debugging line
+        # print(f"OpenAI Vision response: {response}")  # Debugging line
         return response.choices[0].message.content
         
     except Exception as e:
@@ -362,7 +363,7 @@ def parse_recipe_text(text, recipe_source=None, is_file=True):
         # {text}
         # """
 
-        print(f"Prompt: {prompt}")  # Debugging line
+        print("Prompt complete")  # Debugging line
         response = openai.chat.completions.create(
             model="gpt-4o-mini",  # Fast and accurate - or use "gpt-4o" for best results
             messages=[
@@ -372,9 +373,9 @@ def parse_recipe_text(text, recipe_source=None, is_file=True):
             temperature=0.1,  # Lower temperature = more consistent
             max_tokens=3000
         )
-        print(f"OpenAI response: {response}")  # Debugging line
+        print("OpenAI response")  # Debugging line
         content = response.choices[0].message.content.strip()
-        print(f"OpenAI content: {content}")  # Debugging line
+        print("OpenAI content")  # Debugging line
         # Remove markdown code blocks if present
         content = re.sub(r'^```json\s*|\s*```$', '', content, flags=re.MULTILINE)
         content = content.strip()
