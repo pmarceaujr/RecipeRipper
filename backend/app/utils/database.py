@@ -201,7 +201,7 @@ def delete_recipe(recipe_id):
 
 
 def serialize_recipe(recipe):
-    print("Inside serialize_recipe function")
+    # print("Inside serialize_recipe function")
 
     # Safely convert created_at 
     created_at = recipe.created_at 

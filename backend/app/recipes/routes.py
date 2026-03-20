@@ -170,9 +170,9 @@ def upload_recipe():
 
 
                 # Save to DB
-                recipe_id = save_recipe(recipe_data, user_id=user_id)
+                # recipe_id = save_recipe(recipe_data, user_id=user_id)
 
-                update_job(job_id, status="done", recipe_id=recipe_id)
+                # update_job(job_id, status="done", recipe_id=recipe_id)
 
             except Exception as e:
                 app.logger.error(f"Background upload failed for job {job_id}: {e}")
