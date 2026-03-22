@@ -165,8 +165,15 @@ const handleLogout = () => {
         "/api/recipes/from-url",
         { url }
       );
-
-      alert(`Success! Added: ${response.data.title}`);
+      Swal.fire({
+        title: 'Recipe Processing Started',          // ← your custom title
+        text: 'We are extracting and saving your recipe...',
+        icon: 'info',
+        confirmButtonText: 'OK',
+        timer: 3000,                                 // auto-close after 3 seconds
+        showConfirmButton: false                     // hide OK button if timer used
+      });
+      // alert(`Success! Added: ${response.data.title}`);
       setUrl("");
       await fetchRecipes();
     } catch (err) {
