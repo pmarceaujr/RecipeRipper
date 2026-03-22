@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from 'sweetalert2';
+import 'sweetalert2/dist/sweetalert2.min.css'; // optional but makes it look nice
 import api from "../api/axios";
 import { useAuth } from "../auth/AuthContext";
 
@@ -184,7 +185,24 @@ const handleLogout = () => {
   };
 
   const handleDelete = async (id, title) => {
-    if (!window.confirm(`Delete "${title}"?`)) return;
+    // Optional: early return if no id (defensive)
+    if (!id) return;
+
+    const result = await Swal.fire({
+      title: 'Delete this recipe?',
+      html: `Are you sure you want to permanently delete<br><strong>"${title}"</strong>?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it',
+      cancelButtonText: 'No, keep it',
+      reverseButtons: true,              // puts dangerous action on right
+      focusCancel: true,                 // better accessibility
+      allowOutsideClick: () => !Swal.isLoading(), // prevent closing while loading
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       await api.delete(`${API_URL}/api/recipe/${id}`);
@@ -193,6 +211,43 @@ const handleLogout = () => {
       setError("Failed to delete recipe");
     }
   };
+
+  // const handleDelete = async (id, title) => {
+  //   // if (!window.confirm(`Delete "${title}"?`)) return;
+
+  //   // Example: instead of confirm("Are you sure?")
+  //   Swal.fire({
+  //     title: 'Are you sure, Paul?',               // ← custom title
+  //     text: 'This recipe will be permanently deleted.',
+  //     icon: 'warning',
+  //     showCancelButton: true,
+  //     confirmButtonColor: '#d33',
+  //     cancelButtonColor: '#3085d6',
+  //     confirmButtonText: 'Yes, delete it!',
+  //     cancelButtonText: 'No, keep it'
+  //   }).then((result) => {
+  //     if (result.isConfirmed) {
+  //       // do the delete action
+  //       try {
+  //         await api.delete(`${API_URL}/api/recipe/${id}`);
+  //         await fetchRecipes();
+  //       } catch (err) {
+  //         setError("Failed to delete recipe");
+  //       }
+  //     }
+  //     else {
+  //       // User cancelled, do nothing
+  //       return
+  //     }
+  //   });
+
+  //   try {
+  //     await api.delete(`${API_URL}/api/recipe/${id}`);
+  //     await fetchRecipes();
+  //   } catch (err) {
+  //     setError("Failed to delete recipe");
+  //   }
+  // };
 
   const handleEdit = async (id, title) => {
     // if (!window.confirm(`Delete "${title}"?`)) return;
