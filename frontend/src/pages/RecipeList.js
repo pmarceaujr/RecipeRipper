@@ -136,11 +136,11 @@ const handleLogout = () => {
 
       Swal.fire({
         title: 'Recipe Processing Started',          // ← your custom title
-        text: 'We are extracting and saving your recipe...',
+        text: 'We are extracting and saving your recipe... it may take 30-60 seconds.',
         icon: 'info',
         confirmButtonText: 'OK',
-        timer: 3000,                                 // auto-close after 3 seconds
-        showConfirmButton: false                     // hide OK button if timer used
+        timer: 30000,                                 // auto-close after 30 seconds
+        showConfirmButton: true                     // hide OK button if timer used
       });
       // alert(`Success! Added: ${response.data.title}`);
       setSelectedFile(null);
@@ -167,11 +167,11 @@ const handleLogout = () => {
       );
       Swal.fire({
         title: 'Recipe Processing Started',          // ← your custom title
-        text: 'We are extracting and saving your recipe...',
+        text: 'We are extracting and saving your recipe... it may take 30-60 seconds.',
         icon: 'info',
         confirmButtonText: 'OK',
-        timer: 3000,                                 // auto-close after 3 seconds
-        showConfirmButton: false                     // hide OK button if timer used
+        timer: 30000,                                 // auto-close after 30 seconds
+        showConfirmButton: true                     // hide OK button if timer used
       });
       // alert(`Success! Added: ${response.data.title}`);
       setUrl("");
