@@ -26,6 +26,11 @@ export default function RecipeList() {
   const [loadingValues, setLoadingValues] = useState(false);
   const [filteredRecipes, setFilteredRecipes] = useState([]);
 
+  // Ref to track previous recipe count for polling detection
+  const prevRecipeCountRef = useRef(0);
+
+  // Polling interval ref (so we can clear it)
+  const pollIntervalRef = useRef(null);
 
   useEffect(() => {
     applyFilter();
@@ -106,11 +111,34 @@ const handleLogout = () => {
       }      
       console.log("Fetched recipes:", response.config.headers);
       setRecipes(response.data);
+      prevRecipeCountRef.current = response.data.length;
     } catch (err) {
       console.error("Error fetching recipes:", err);
       setError("Failed to load recipes");
     }
   };
+
+  // Start polling after upload
+  const startPolling = () => {
+    // Clear any existing interval
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+    }
+
+    // Show processing modal
+    Swal.fire({
+      title: 'Processing Your Recipe',
+      html: 'We are extracting text and saving it to your database...<br>This usually takes 20–60 seconds.',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showConfirmButton: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+  };
+
+
 
   const handleFileChange = (e) => {
     setSelectedFile(e.target.files[0]);
@@ -135,15 +163,17 @@ const handleLogout = () => {
         { headers: { "Content-Type": "multipart/form-data" } }
       );
 
-      Swal.fire({
-        title: 'Recipe Processing Started',          // ← your custom title
-        text: 'We are extracting and saving your recipe... it may take 30-60 seconds.',
-        icon: 'info',
-        confirmButtonText: 'OK',
-        timer: 30000,                                 // auto-close after 30 seconds
-        showConfirmButton: true                     // hide OK button if timer used
-      });
+      // Swal.fire({
+      //   title: 'Recipe Processing Started',          // ← your custom title
+      //   text: 'We are extracting and saving your recipe... it may take 30-60 seconds.',
+      //   icon: 'info',
+      //   confirmButtonText: 'OK',
+      //   timer: 30000,                                 // auto-close after 30 seconds
+      //   showConfirmButton: true                     // hide OK button if timer used
+      // });
       // alert(`Success! Added: ${response.data.title}`);
+      // Start polling immediately after 202 response
+      startPolling();      
       setSelectedFile(null);
       document.getElementById("fileInput").value = "";
       await fetchRecipes();
@@ -166,15 +196,17 @@ const handleLogout = () => {
         "/api/recipes/from-url",
         { url }
       );
-      Swal.fire({
-        title: 'Recipe Processing Started',          // ← your custom title
-        text: 'We are extracting and saving your recipe... it may take 30-60 seconds.',
-        icon: 'info',
-        confirmButtonText: 'OK',
-        timer: 30000,                                 // auto-close after 30 seconds
-        showConfirmButton: true                     // hide OK button if timer used
-      });
+      // Swal.fire({
+      //   title: 'Recipe Processing Started',          // ← your custom title
+      //   text: 'We are extracting and saving your recipe... it may take 30-60 seconds.',
+      //   icon: 'info',
+      //   confirmButtonText: 'OK',
+      //   timer: 30000,                                 // auto-close after 30 seconds
+      //   showConfirmButton: true                     // hide OK button if timer used
+      // });
       // alert(`Success! Added: ${response.data.title}`);
+      // Start polling immediately after 202 response
+      startPolling();       
       setUrl("");
       await fetchRecipes();
     } catch (err) {
