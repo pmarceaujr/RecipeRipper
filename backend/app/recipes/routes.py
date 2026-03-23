@@ -266,8 +266,10 @@ def add_from_url():
     
                 if 'Failed to scrape URL: 402 Client Error:' in err_str:
                     set_error(job_id, "Website prevents scraping, print to PDF and upload as a file.")
+                    return jsonify({"error": "Website prevents scraping, print to PDF and upload as a file."}), 402
                 else:
                     set_error(job_id, err_str)
+                    return jsonify({"error": "Failed to import from URL"}), 500
  
         threading.Thread(target=run, daemon=True).start()
     
