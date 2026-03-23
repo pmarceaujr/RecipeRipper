@@ -260,6 +260,7 @@ const handleLogout = () => {
         "/api/recipes/from-url",
         { url }
       );
+      console.log(response)
 
       startPolling();       
       setUrl("");
