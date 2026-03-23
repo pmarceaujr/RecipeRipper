@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css'; // optional but makes it look nice
 import api from "../api/axios";
 import { useAuth } from "../auth/AuthContext";
+import { showAlert } from "../utils/alerts";
 
 // import "../App.css";
 
@@ -51,7 +52,6 @@ export default function RecipeList() {
       try {
         // Option A: Ask backend for distinct values (recommended long-term)
         // const res = await api.get(`/api/recipes/distinct/${searchCategory}`);
-
         // Option B: For now — extract from already loaded recipes (quick & works without backend change)
         const unique = [...new Set(
           recipes
@@ -128,7 +128,7 @@ const handleLogout = () => {
     // Show processing modal
     Swal.fire({
       title: 'Processing Your Recipe',
-      html: 'We are extracting text and saving it to your database...<br>This usually takes 20–60 seconds.',
+      html: 'Extracting text and saving it to your database...<br>This usually takes 20–60 seconds.',
       allowOutsideClick: false,
       allowEscapeKey: false,
       showConfirmButton: false,
@@ -137,9 +137,10 @@ const handleLogout = () => {
       }
     });
 
-
+    var pollingAttempts = 0;
     pollIntervalRef.current = setInterval(async () => {
       try {
+        pollingAttempts++;
         const res = await api.get("/api/recipes");
         const currentRecipes = res.data || [];
 
@@ -159,6 +160,34 @@ const handleLogout = () => {
             showConfirmButton: false
           });
         }
+        else {
+          if (pollingAttempts <= 6) {
+            // Show still processing modal
+            Swal.fire({
+              title: 'Processing Your Recipe',
+              html: 'Still extracting text...  this must be a little more complex than typical recipes.',
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+              showConfirmButton: false,
+              didOpen: () => {
+                Swal.showLoading();
+              }
+            });
+          }
+          else {
+            // Show still processing it must be a big one
+            Swal.fire({
+              title: 'Processing Your Recipe',
+              html: 'Still extracting text...  this must be a complex extraction, it usually does not take this long.',
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+              showConfirmButton: false,
+              didOpen: () => {
+                Swal.showLoading();
+              }
+            });
+          };
+        };
       } catch (err) {
         console.error("Polling error:", err);
       }
@@ -243,12 +272,15 @@ const handleLogout = () => {
     setLoading(false);
   };
 
+
+
+
   const handleDelete = async (id, title) => {
     // Optional: early return if no id (defensive)
     if (!id) return;
 
     const result = await Swal.fire({
-      title: 'Delete this recipe?',
+      title: 'Delete recipe?',
       html: `Are you sure you want to permanently delete<br><strong>"${title}"</strong>?`,
       icon: 'warning',
       showCancelButton: true,
@@ -271,42 +303,7 @@ const handleLogout = () => {
     }
   };
 
-  // const handleDelete = async (id, title) => {
-  //   // if (!window.confirm(`Delete "${title}"?`)) return;
 
-  //   // Example: instead of confirm("Are you sure?")
-  //   Swal.fire({
-  //     title: 'Are you sure, Paul?',               // ← custom title
-  //     text: 'This recipe will be permanently deleted.',
-  //     icon: 'warning',
-  //     showCancelButton: true,
-  //     confirmButtonColor: '#d33',
-  //     cancelButtonColor: '#3085d6',
-  //     confirmButtonText: 'Yes, delete it!',
-  //     cancelButtonText: 'No, keep it'
-  //   }).then((result) => {
-  //     if (result.isConfirmed) {
-  //       // do the delete action
-  //       try {
-  //         await api.delete(`${API_URL}/api/recipe/${id}`);
-  //         await fetchRecipes();
-  //       } catch (err) {
-  //         setError("Failed to delete recipe");
-  //       }
-  //     }
-  //     else {
-  //       // User cancelled, do nothing
-  //       return
-  //     }
-  //   });
-
-  //   try {
-  //     await api.delete(`${API_URL}/api/recipe/${id}`);
-  //     await fetchRecipes();
-  //   } catch (err) {
-  //     setError("Failed to delete recipe");
-  //   }
-  // };
 
   const handleEdit = async (id, title) => {
     // if (!window.confirm(`Delete "${title}"?`)) return;
