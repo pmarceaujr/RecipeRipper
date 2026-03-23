@@ -554,10 +554,35 @@ const handleLogout = () => {
                   >
                     Next
                   </button>
+                  <div style={{ marginTop: '1rem', color: '#555', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                    <span>
+                      Showing {startIndex + 1}–{Math.min(endIndex, totalRecipes)} of {totalRecipes}
+                    </span>
 
-                  <p style={{ marginTop: '1rem', color: '#555' }}>
-                    Showing {startIndex + 1}–{Math.min(endIndex, totalRecipes)} of {totalRecipes}
-                  </p>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      Recipes per page:
+                      <select
+                        value={recipesPerPage}
+                        onChange={(e) => {
+                          const newSize = Number(e.target.value);
+                          setRecipesPerPage(newSize);
+                          // Reset to page 1 if current page would be out of range
+                          const newTotalPages = Math.ceil(totalRecipes / newSize);
+                          if (currentPage > newTotalPages) {
+                            setCurrentPage(1);
+                          }
+                          // Optional: save preference
+                          localStorage.setItem('recipesPerPage', newSize);
+                        }}
+                        style={{ padding: '6px', fontSize: '1rem', borderRadius: '4px' }}
+                      >
+                        <option value={5}>5</option>
+                        <option value={10}>10</option>
+                        <option value={15}>15</option>
+                        <option value={20}>20</option>
+                      </select>
+                    </label>
+                  </div>
                 </div>
               )}
             </div>            
