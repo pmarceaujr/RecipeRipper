@@ -136,6 +136,33 @@ const handleLogout = () => {
         Swal.showLoading();
       }
     });
+
+
+    pollIntervalRef.current = setInterval(async () => {
+      try {
+        const res = await api.get("/api/recipes");
+        const currentRecipes = res.data || [];
+
+        // If count increased → new recipe arrived
+        if (currentRecipes.length > prevRecipeCountRef.current) {
+          clearInterval(pollIntervalRef.current);
+          pollIntervalRef.current = null;
+
+          setRecipes(currentRecipes);
+          prevRecipeCountRef.current = currentRecipes.length;
+
+          Swal.fire({
+            title: 'Success!',
+            text: 'Your new recipe is ready and added to the list.',
+            icon: 'success',
+            timer: 2500,
+            showConfirmButton: false
+          });
+        }
+      } catch (err) {
+        console.error("Polling error:", err);
+      }
+    }, 5000); // Poll every 5 seconds
   };
 
 
