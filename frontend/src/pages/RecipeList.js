@@ -161,7 +161,7 @@ const handleLogout = () => {
           });
         }
         else {
-          if (pollingAttempts <= 6) {
+          if (pollingAttempts == 2) {
             // Show still processing modal
             Swal.fire({
               title: 'Processing Your Recipe',
@@ -174,7 +174,7 @@ const handleLogout = () => {
               }
             });
           }
-          else {
+          else (pollingAttempts == 4) {
             // Show still processing it must be a big one
             Swal.fire({
               title: 'Processing Your Recipe',
@@ -219,16 +219,6 @@ const handleLogout = () => {
         { headers: { "Content-Type": "multipart/form-data" } }
       );
 
-      // Swal.fire({
-      //   title: 'Recipe Processing Started',          // ← your custom title
-      //   text: 'We are extracting and saving your recipe... it may take 30-60 seconds.',
-      //   icon: 'info',
-      //   confirmButtonText: 'OK',
-      //   timer: 30000,                                 // auto-close after 30 seconds
-      //   showConfirmButton: true                     // hide OK button if timer used
-      // });
-      // alert(`Success! Added: ${response.data.title}`);
-      // Start polling immediately after 202 response
       startPolling();      
       setSelectedFile(null);
       document.getElementById("fileInput").value = "";
@@ -252,16 +242,7 @@ const handleLogout = () => {
         "/api/recipes/from-url",
         { url }
       );
-      // Swal.fire({
-      //   title: 'Recipe Processing Started',          // ← your custom title
-      //   text: 'We are extracting and saving your recipe... it may take 30-60 seconds.',
-      //   icon: 'info',
-      //   confirmButtonText: 'OK',
-      //   timer: 30000,                                 // auto-close after 30 seconds
-      //   showConfirmButton: true                     // hide OK button if timer used
-      // });
-      // alert(`Success! Added: ${response.data.title}`);
-      // Start polling immediately after 202 response
+
       startPolling();       
       setUrl("");
       await fetchRecipes();
