@@ -27,17 +27,21 @@ export default function RecipeList() {
   const [loadingValues, setLoadingValues] = useState(false);
   const [filteredRecipes, setFilteredRecipes] = useState([]);
 
+  const [recipesPerPage, setRecipesPerPage] = useState(() => {
+    const saved = localStorage.getItem('recipesPerPage');
+    return saved ? Number(saved) : 10; // default 10
+  });
+
   // Refs for polling
   const prevRecipeCountRef = useRef(0);
   const pollIntervalRef = useRef(null);
   // Configurable constants for pagination
-  const RECIPES_PER_PAGE = 10;
   // Pagination logic
   const recipesToShow = filteredRecipes || recipes;
   const totalRecipes = recipesToShow.length;
-  const totalPages = Math.ceil(totalRecipes / RECIPES_PER_PAGE);
-  const startIndex = (currentPage - 1) * RECIPES_PER_PAGE;
-  const endIndex = startIndex + RECIPES_PER_PAGE;
+  const totalPages = Math.ceil(totalRecipes / recipesPerPage);
+  const startIndex = (currentPage - 1) * recipesPerPage;
+  const endIndex = startIndex + recipesPerPage;
   const paginatedRecipes = recipesToShow.slice(startIndex, endIndex);
 
   useEffect(() => {
