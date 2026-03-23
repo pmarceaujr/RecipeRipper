@@ -142,7 +142,7 @@ const handleLogout = () => {
     // Show processing modal
     Swal.fire({
       title: 'Processing Your Recipe',
-      html: 'Extracting text and saving it to your database...<br>This usually takes 20–60 seconds.',
+      html: 'Extracting text and saving it to your database...<br>This usually takes 20-40 seconds.',
       allowOutsideClick: false,
       allowEscapeKey: false,
       showConfirmButton: false,
@@ -179,7 +179,7 @@ const handleLogout = () => {
             // Show still processing modal
             Swal.fire({
               title: 'Processing Your Recipe',
-              html: 'Still extracting text...  this must be a little more complex than typical recipes.',
+              html: 'Still extracting text... at 30 seconds.  <br>This must be a little more complex than typical recipes.',
               allowOutsideClick: false,
               allowEscapeKey: false,
               showConfirmButton: false,
@@ -192,7 +192,7 @@ const handleLogout = () => {
             // Show still processing it must be a big one
             Swal.fire({
               title: 'Processing Your Recipe',
-              html: 'Still extracting text...  this must be a complex extraction, it usually does not take this long.',
+              html: 'Still extracting text... at 60 seconds.  <br>This must be a complex extraction, it usually does not take this long.',
               allowOutsideClick: false,
               allowEscapeKey: false,
               showConfirmButton: false,
