@@ -534,19 +534,14 @@ const handleLogout = () => {
                   </button>
 
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                    <button
-                      key={page}
-                      onClick={() => goToPage(page)}
+                    <button 
+                      className="page-btn" 
                       style={{
-                        margin: '0 4px',
-                        padding: '2px 2px',
                         background: currentPage === page ? '#3085d6' : '#f0f0f0',
                         color: currentPage === page ? 'white' : 'black',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                      }}
-                    >
+                      }}   
+                      key={page}
+                      onClick={() => goToPage(page)}>
                       {page}
                     </button>
                   ))}
