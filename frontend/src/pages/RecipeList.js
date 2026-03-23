@@ -160,8 +160,8 @@ const handleLogout = () => {
             showConfirmButton: false
           });
         }
-        else {
-          if (pollingAttempts == 2) {
+        else if (pollingAttempts == 2) {
+
             // Show still processing modal
             Swal.fire({
               title: 'Processing Your Recipe',
@@ -174,7 +174,7 @@ const handleLogout = () => {
               }
             });
           }
-          else (pollingAttempts == 4) {
+        else if (pollingAttempts == 4) {
             // Show still processing it must be a big one
             Swal.fire({
               title: 'Processing Your Recipe',
@@ -187,7 +187,7 @@ const handleLogout = () => {
               }
             });
           };
-        };
+
       } catch (err) {
         console.error("Polling error:", err);
       }
