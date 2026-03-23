@@ -13,13 +13,13 @@ const API_URL = process.env.REACT_APP_API_URL
 
 export default function RecipeList() {
   const [recipes, setRecipes] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
-  const { logout } = useAuth();
-  const { isLoggedIn } = useAuth();
+  const { logout, isLoggedIn } = useAuth();
   const navigate = useNavigate();
   const [searchCategory, setSearchCategory] = useState("");
   const [searchValue, setSearchValue] = useState("");
