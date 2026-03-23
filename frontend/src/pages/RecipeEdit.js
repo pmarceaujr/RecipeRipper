@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import Swal from 'sweetalert2';
+import 'sweetalert2/dist/sweetalert2.min.css'; // optional but makes it look nice
 import api from "../api/axios";
 // import { Link, useParams } from 'react-router-dom';
 
@@ -95,7 +97,18 @@ const RecipeEdit = () => {
     setError('');
     try {
       await api.put(`${API_URL}/api/recipe/${id}`, recipe);
-      alert('Recipe updated!');
+      // alert('Recipe updated!');
+      // Show processing modal
+      Swal.fire({
+        title: 'Processing Your Recipe',
+        html: 'Extracting text and saving it to your database...<br>This usually takes 20–60 seconds.',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });      
       navigate(`/recipe/${id}`);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to update recipe');

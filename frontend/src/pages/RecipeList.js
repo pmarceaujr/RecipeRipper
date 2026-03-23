@@ -160,7 +160,7 @@ const handleLogout = () => {
             showConfirmButton: false
           });
         }
-        else if (pollingAttempts == 2) {
+        else if (pollingAttempts == 6) {
 
             // Show still processing modal
             Swal.fire({
@@ -174,7 +174,7 @@ const handleLogout = () => {
               }
             });
           }
-        else if (pollingAttempts == 4) {
+        else if (pollingAttempts == 12) {
             // Show still processing it must be a big one
             Swal.fire({
               title: 'Processing Your Recipe',
