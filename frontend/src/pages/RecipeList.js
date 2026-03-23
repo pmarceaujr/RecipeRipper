@@ -1,12 +1,14 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from 'sweetalert2';
-import 'sweetalert2/dist/sweetalert2.min.css';
+import 'sweetalert2/dist/sweetalert2.min.css'; // optional but makes it look nice
 import api from "../api/axios";
 import { useAuth } from "../auth/AuthContext";
 
-// Use environment variable or default
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+// import "../App.css";
+
+// Use environment variable or default to localhost
+const API_URL = process.env.REACT_APP_API_URL 
 
 export default function RecipeList() {
   const [recipes, setRecipes] = useState([]);
@@ -15,7 +17,8 @@ export default function RecipeList() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
-    const { logout, isLoggedIn } = useAuth();
+  const { logout } = useAuth();
+  const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
   const [searchCategory, setSearchCategory] = useState("");
   const [searchValue, setSearchValue] = useState("");
@@ -23,19 +26,10 @@ export default function RecipeList() {
   const [loadingValues, setLoadingValues] = useState(false);
   const [filteredRecipes, setFilteredRecipes] = useState([]);
 
-    // Ref to track previous recipe count for polling detection
-    const prevRecipeCountRef = useRef(0);
-
-    // Polling interval ref (so we can clear it)
-    const pollIntervalRef = useRef(null);
-
-    useEffect(() => {
-        fetchRecipes();
-    }, []);
 
   useEffect(() => {
     applyFilter();
-  }, [searchValue, searchCategory, recipes]);
+  }, [searchValue, searchCategory, recipes]);   // ← add this if you want live filtering
 
   useEffect(() => {
     if (!searchCategory) {
@@ -45,9 +39,15 @@ export default function RecipeList() {
       return;
     }
 
+
+
     const loadValues = async () => {
       setLoadingValues(true);
-        try {
+      try {
+        // Option A: Ask backend for distinct values (recommended long-term)
+        // const res = await api.get(`/api/recipes/distinct/${searchCategory}`);
+
+        // Option B: For now — extract from already loaded recipes (quick & works without backend change)
         const unique = [...new Set(
           recipes
             .map(r => r[searchCategory])
@@ -66,9 +66,10 @@ export default function RecipeList() {
     loadValues();
   }, [searchCategory, recipes]);
 
+
   const applyFilter = () => {
     if (!searchCategory || !searchValue) {
-        setFilteredRecipes(null);
+      setFilteredRecipes(null); // show all
       return;
     }
     const filtered = recipes.filter(recipe => {
@@ -76,70 +77,44 @@ export default function RecipeList() {
       if (value === undefined || value === null) return false;
       return String(value).toLowerCase() === searchValue.toLowerCase();
     });
+
     setFilteredRecipes(filtered);
+  };  
+
+  useEffect(() => {
+    fetchRecipes();
+  }, []);
+
+const handleLogout = () => {
+  logout();
+  navigate("/login");
+};
+
+  const handleLogin = () => {
+    logout();
+    navigate("/login");
   };
 
   const fetchRecipes = async () => {
     try {
       const response = await api.get("/api/recipes");
       if (response.status === 204) {
-          setRecipes([]);
-          setMessage("You currently do not have any recipes saved. Let's get started!");
+        // Handle "no content" case – show your message
+        setRecipes([]); // or set a flag
+        setMessage("You currently do not have any recipes saved.  Let's get started!");
         return;
-      }
+      }      
+      console.log("Fetched recipes:", response.config.headers);
       setRecipes(response.data);
-        // Update previous count after successful fetch
-        prevRecipeCountRef.current = response.data.length;
     } catch (err) {
       console.error("Error fetching recipes:", err);
       setError("Failed to load recipes");
     }
   };
 
-    // Start polling after upload
-    const startPolling = () => {
-        // Clear any existing interval
-        if (pollIntervalRef.current) {
-            clearInterval(pollIntervalRef.current);
-        }
-
-        // Show processing modal
-        Swal.fire({
-            title: 'Processing Your Recipe',
-            html: 'We are extracting text and saving it to your database...<br>This usually takes 20–60 seconds.',
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            showConfirmButton: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-
-        pollIntervalRef.current = setInterval(async () => {
-            try {
-                const res = await api.get("/api/recipes");
-                const currentRecipes = res.data || [];
-
-                // If count increased → new recipe arrived
-                if (currentRecipes.length > prevRecipeCountRef.current) {
-                    clearInterval(pollIntervalRef.current);
-                    pollIntervalRef.current = null;
-
-                    setRecipes(currentRecipes);
-                    prevRecipeCountRef.current = currentRecipes.length;
-
-                    Swal.fire({
-                        title: 'Success!',
-                        text: 'Your new recipe is ready and added to the list.',
-                        icon: 'success',
-                        timer: 2500,
-                        showConfirmButton: false
-                    });
-                }
-            } catch (err) {
-                console.error("Polling error:", err);
-            }
-        }, 5000); // Poll every 5 seconds
+  const handleFileChange = (e) => {
+    setSelectedFile(e.target.files[0]);
+    setError("");
   };
 
   const handleFileUpload = async () => {
@@ -160,38 +135,337 @@ export default function RecipeList() {
         { headers: { "Content-Type": "multipart/form-data" } }
       );
 
-        // Start polling immediately after 202 response
-        startPolling();
-
-      setSelectedFile(null);
-        document.getElementById("fileInput").value = "";
-    } catch (err) {
-        setError(err.response?.data?.error || "Failed to upload recipe");
       Swal.fire({
-          title: 'Upload Failed',
-          text: err.response?.data?.error || "Something went wrong.",
-          icon: 'error'
+        title: 'Recipe Processing Started',          // ← your custom title
+        text: 'We are extracting and saving your recipe... it may take 30-60 seconds.',
+        icon: 'info',
+        confirmButtonText: 'OK',
+        timer: 30000,                                 // auto-close after 30 seconds
+        showConfirmButton: true                     // hide OK button if timer used
       });
-    } finally {
-        setLoading(false);
+      // alert(`Success! Added: ${response.data.title}`);
+      setSelectedFile(null);
+      document.getElementById("fileInput").value = "";
+      await fetchRecipes();
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to upload recipe");
+    }
+
+    setLoading(false);
+  };
+
+  const handleUrlSubmit = async (e) => {
+    e.preventDefault();
+    if (!url) return;
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await api.post(
+        "/api/recipes/from-url",
+        { url }
+      );
+      Swal.fire({
+        title: 'Recipe Processing Started',          // ← your custom title
+        text: 'We are extracting and saving your recipe... it may take 30-60 seconds.',
+        icon: 'info',
+        confirmButtonText: 'OK',
+        timer: 30000,                                 // auto-close after 30 seconds
+        showConfirmButton: true                     // hide OK button if timer used
+      });
+      // alert(`Success! Added: ${response.data.title}`);
+      setUrl("");
+      await fetchRecipes();
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to add recipe from URL");
+    }
+
+    setLoading(false);
+  };
+
+  const handleDelete = async (id, title) => {
+    // Optional: early return if no id (defensive)
+    if (!id) return;
+
+    const result = await Swal.fire({
+      title: 'Delete this recipe?',
+      html: `Are you sure you want to permanently delete<br><strong>"${title}"</strong>?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'OK',
+      cancelButtonText: 'Cancel',
+      reverseButtons: true,              // puts dangerous action on right
+      focusCancel: true,                 // better accessibility
+      allowOutsideClick: () => !Swal.isLoading(), // prevent closing while loading
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await api.delete(`${API_URL}/api/recipe/${id}`);
+      await fetchRecipes();
+    } catch (err) {
+      setError("Failed to delete recipe");
     }
   };
 
-    // Cleanup polling on unmount
-    useEffect(() => {
-        return () => {
-            if (pollIntervalRef.current) {
-                clearInterval(pollIntervalRef.current);
-            }
-        };
-  }, []);
+  // const handleDelete = async (id, title) => {
+  //   // if (!window.confirm(`Delete "${title}"?`)) return;
 
-    // ... rest of your handlers remain the same (handleUrlSubmit, handleDelete, etc.)
+  //   // Example: instead of confirm("Are you sure?")
+  //   Swal.fire({
+  //     title: 'Are you sure, Paul?',               // ← custom title
+  //     text: 'This recipe will be permanently deleted.',
+  //     icon: 'warning',
+  //     showCancelButton: true,
+  //     confirmButtonColor: '#d33',
+  //     cancelButtonColor: '#3085d6',
+  //     confirmButtonText: 'Yes, delete it!',
+  //     cancelButtonText: 'No, keep it'
+  //   }).then((result) => {
+  //     if (result.isConfirmed) {
+  //       // do the delete action
+  //       try {
+  //         await api.delete(`${API_URL}/api/recipe/${id}`);
+  //         await fetchRecipes();
+  //       } catch (err) {
+  //         setError("Failed to delete recipe");
+  //       }
+  //     }
+  //     else {
+  //       // User cancelled, do nothing
+  //       return
+  //     }
+  //   });
 
+  //   try {
+  //     await api.delete(`${API_URL}/api/recipe/${id}`);
+  //     await fetchRecipes();
+  //   } catch (err) {
+  //     setError("Failed to delete recipe");
+  //   }
+  // };
+
+  const handleEdit = async (id, title) => {
+    // if (!window.confirm(`Delete "${title}"?`)) return;
+
+    try {
+      navigate(`/recipe/${id}/edit`);
+      // await fetchRecipes();
+    } catch (err) {
+      setError(`Failed to navigate to edit page for "${title}".`);
+    }
+  };
   return (
     <div className="App">
-          {/* Your existing JSX remains unchanged */}
-          {/* ... header, left/right columns, upload forms, recipe grid ... */}
+      <header className="App-header">
+        <div className="header-content">
+
+        <h1>🍳 The Recipe Ripper Database</h1>
+          <button className="auth-button"
+            onClick={isLoggedIn ? handleLogout : handleLogin}
+        >
+          {isLoggedIn ? "Login" : "Logout"}
+          </button>
+        </div>
+      </header>   
+
+
+      <div className="container">
+        {/* LEFT SIDE */}
+        <div className="left">
+          <div className="add-recipe-section">
+            <h2>Add New Recipe</h2>
+
+            {error && <div className="error-message">{error}</div>}
+            {message && !error && <div className="status-message">{message}</div>}
+
+            {/* File Upload */}
+            <div className="upload-option">
+              <h3>📁 Upload File</h3>
+              <p className="file-info">Supports: TXT, PDF, JPG, PNG</p>
+
+              <input
+                id="fileInput"
+                type="file"
+                onChange={handleFileChange}
+                accept=".txt,.pdf,.jpg,.jpeg,.png"
+                disabled={loading}
+              />
+
+              {selectedFile && (
+                <div>
+                  <p>Selected: {selectedFile.name}</p>
+                  <button style={{ width: "165px" }} onClick={handleFileUpload} disabled={loading}>
+                    {loading ? "Processing..." : "Upload & Parse"}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* URL Input */}
+            <div className="upload-option">
+              <h3>🔗 Add from URL</h3>
+              <p>By importing a recipe, you confirm this content is for your personal use only.</p>
+
+              <form onSubmit={handleUrlSubmit}>
+                <input
+                  type="url"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  placeholder="https://example.com/recipe"
+                  disabled={loading}
+                  required
+                />
+
+                <button style={{ width: "135px" }} type="submit" disabled={loading}>
+                  {loading ? "Processing..." : "Add Recipe"}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT SIDE */}
+        <div className="right">
+          <div className="recipe-section">
+            {/* Changed: header + search on one line */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '1.2rem',
+                flexWrap: 'wrap',
+                gap: '1rem'
+              }}
+            >
+              <h2 style={{ margin: 0 }}>
+                My Recipes ({recipes.length})</h2>
+
+              {/* ──→  New search controls start here  ──→ */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+
+                <select
+                  value={searchCategory}
+                  onChange={(e) => {
+                    setSearchCategory(e.target.value);
+                    setSearchValue('');
+                    setSearchValue(''); // reset second field when category changes
+                  }}
+                  style={{ padding: '0.5rem', minWidth: '140px', fontSize: '1rem' }}
+                >
+                  <option value="">All categories</option>
+                  <option value="course">Course</option>
+                  <option value="cuisine">Cuisine</option>
+                  <option value="primary_ingredient">Main Ingredient</option>
+                  {/* Add more filter types later if needed */}
+                </select>
+
+                <select
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                  disabled={!searchCategory}
+                  style={{ padding: '0.5rem', minWidth: '180px', fontSize: '1rem' }}
+                >
+                  <option value="">
+                    {loadingValues ? 'Loading...' : 'Select value...'}
+                  </option>
+                  {availableValues.map((val) => (
+                    <option key={val} value={val}>
+                      {val}
+                    </option>
+                  ))}
+                </select>
+
+                {/* {(searchCategory || searchValue) && (
+                  <button
+                    onClick={() => {
+                      setSearchCategory('');
+                      setSearchValue('');
+                      setFilteredRecipes(null); // or just rely on empty filter
+                    }}
+                    style={{ background: '#f44336', color: 'white', width: '80px' }}
+                  >
+                    Clear
+                  </button> */}
+                {/* )} */}
+              </div>
+              {/* ←─  New search controls end here  ←─ */}
+
+            </div>            
+
+
+            {loading && <p className="loading">Loading...</p>}
+
+            <div className="recipes-grid">
+              {/* Add this line for better UX */}
+              {filteredRecipes !== null && (
+                <p style={{ color: "#555", marginBottom: "1rem" }}>
+                  Showing {filteredRecipes.length} filtered recipe(s)
+                  {filteredRecipes.length === 0 && " — no matches"}
+                </p>
+              )}
+
+              {(filteredRecipes !== null ? filteredRecipes : recipes).map((recipe) => (
+                <div key={recipe.id} className="recipe-card">
+                  <div className="recipe-header">
+                    <h4>
+                      <Link to={`/recipe/${recipe.id}`}>
+                        {recipe.title}
+                      </Link>
+                    </h4>
+
+
+                  </div>
+
+                  <p className="recipe-category">
+                    <strong>Course:</strong>{" "}
+                    {recipe.course} {" "}
+                    <span style={{ marginLeft: "10px" }}></span>
+                    <strong>Cuisine:</strong>{" "}
+                    {recipe.cuisine}
+                    <span style={{ marginLeft: "10px" }}></span>
+                    <strong>Main Ingredient:</strong>{" "}
+                    {recipe.primary_ingredient} {""}
+                    <span style={{ marginLeft: "10px" }}></span>
+                    <strong>Total Time:</strong>{" "}
+                    {recipe.total_time}                    
+                  </p>
+
+                  {recipe.recipe_source && (
+                    <p className="recipe-source">
+                      <strong>Source:</strong>{" "}
+                      {recipe.is_url === 1 ? (
+                        recipe.recipe_source
+                      ) : (
+                        <a
+                          href={recipe.recipe_source}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          View URL
+                        </a>
+                      )}
+                    </p>
+                  )}
+                    <div className="recipe-actions">
+                      <div className="tooltip">
+                      <button className="edit-btn" onClick={() => handleEdit(recipe.id)} title="Edit">✏️</button>
+                      </div>
+                      <div className="tooltip">
+                      <button className="delete-btn" onClick={() => handleDelete(recipe.id, recipe.title)} title="Delete">🗑️</button>
+                    </div>
+                    </div>                  
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
