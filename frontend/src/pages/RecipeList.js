@@ -178,7 +178,7 @@ const handleLogout = () => {
             showConfirmButton: false
           });
         }
-        else if (pollingAttempts == 6) {
+        else if (pollingAttempts === 6) {
 
             // Show still processing modal
             Swal.fire({
@@ -192,7 +192,7 @@ const handleLogout = () => {
               }
             });
           }
-        else if (pollingAttempts == 12) {
+        else if (pollingAttempts === 12) {
             // Show still processing it must be a big one
             Swal.fire({
               title: 'Processing Your Recipe',
@@ -539,7 +539,7 @@ const handleLogout = () => {
                       onClick={() => goToPage(page)}
                       style={{
                         margin: '0 4px',
-                        padding: '8px 12px',
+                        padding: '2px 2px',
                         background: currentPage === page ? '#3085d6' : '#f0f0f0',
                         color: currentPage === page ? 'white' : 'black',
                         border: 'none',
