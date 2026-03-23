@@ -100,14 +100,11 @@ const RecipeEdit = () => {
       // alert('Recipe updated!');
       // Show processing modal
       Swal.fire({
-        title: 'Processing Your Recipe',
-        html: 'Extracting text and saving it to your database...<br>This usually takes 20–60 seconds.',
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        showConfirmButton: false,
-        didOpen: () => {
-          Swal.showLoading();
-        }
+        title: 'Success!',
+        text: 'Recipe updated successfully!',
+        icon: 'success',
+        timer: 2500,
+        showConfirmButton: false
       });      
       navigate(`/recipe/${id}`);
     } catch (err) {
