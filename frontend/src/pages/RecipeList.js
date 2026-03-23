@@ -27,11 +27,18 @@ export default function RecipeList() {
   const [loadingValues, setLoadingValues] = useState(false);
   const [filteredRecipes, setFilteredRecipes] = useState([]);
 
-  // Ref to track previous recipe count for polling detection
+  // Refs for polling
   const prevRecipeCountRef = useRef(0);
-
-  // Polling interval ref (so we can clear it)
   const pollIntervalRef = useRef(null);
+  // Configurable constants for pagination
+  const RECIPES_PER_PAGE = 10;
+  // Pagination logic
+  const recipesToShow = filteredRecipes || recipes;
+  const totalRecipes = recipesToShow.length;
+  const totalPages = Math.ceil(totalRecipes / RECIPES_PER_PAGE);
+  const startIndex = (currentPage - 1) * RECIPES_PER_PAGE;
+  const endIndex = startIndex + RECIPES_PER_PAGE;
+  const paginatedRecipes = recipesToShow.slice(startIndex, endIndex);
 
   useEffect(() => {
     applyFilter();
@@ -84,6 +91,7 @@ export default function RecipeList() {
     });
 
     setFilteredRecipes(filtered);
+    setCurrentPage(1); // Reset to page 1 on filter change
   };  
 
   useEffect(() => {
@@ -115,6 +123,12 @@ const handleLogout = () => {
     } catch (err) {
       console.error("Error fetching recipes:", err);
       setError("Failed to load recipes");
+    }
+  };
+
+  const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
     }
   };
 
@@ -437,17 +451,21 @@ const handleLogout = () => {
 
 
             {loading && <p className="loading">Loading...</p>}
+            {error && <p className="error-message">{error}</p>}
+            {message && <p className="status-message">{message}</p>}            
 
             <div className="recipes-grid">
               {/* Add this line for better UX */}
-              {filteredRecipes !== null && (
+              {/* {filteredRecipes !== null && ( */}
+              {paginatedRecipes.length === 0 && totalRecipes > 0 && (  
                 <p style={{ color: "#555", marginBottom: "1rem" }}>
                   Showing {filteredRecipes.length} filtered recipe(s)
                   {filteredRecipes.length === 0 && " — no matches"}
                 </p>
               )}
 
-              {(filteredRecipes !== null ? filteredRecipes : recipes).map((recipe) => (
+              {/* {(filteredRecipes !== null ? filteredRecipes : recipes).map((recipe) => ( */}
+              {paginatedRecipes.map((recipe) => (
                 <div key={recipe.id} className="recipe-card">
                   <div className="recipe-header">
                     <h4>
@@ -499,7 +517,50 @@ const handleLogout = () => {
                     </div>                  
                 </div>
               ))}
-            </div>
+              {/* </div> */}
+              {/* ── Pagination Controls ── */}
+              {totalPages > 1 && (
+                <div className="pagination" style={{ marginTop: '2rem', textAlign: 'center' }}>
+                  <button
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    style={{ margin: '0 8px', padding: '8px 16px' }}
+                  >
+                    Previous
+                  </button>
+
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <button
+                      key={page}
+                      onClick={() => goToPage(page)}
+                      style={{
+                        margin: '0 4px',
+                        padding: '8px 12px',
+                        background: currentPage === page ? '#3085d6' : '#f0f0f0',
+                        color: currentPage === page ? 'white' : 'black',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {page}
+                    </button>
+                  ))}
+
+                  <button
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    style={{ margin: '0 8px', padding: '8px 16px' }}
+                  >
+                    Next
+                  </button>
+
+                  <p style={{ marginTop: '1rem', color: '#555' }}>
+                    Showing {startIndex + 1}–{Math.min(endIndex, totalRecipes)} of {totalRecipes}
+                  </p>
+                </div>
+              )}
+            </div>            
           </div>
         </div>
       </div>
