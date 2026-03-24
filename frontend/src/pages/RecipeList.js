@@ -247,6 +247,26 @@ const handleLogout = () => {
 
       } catch (err) {
         console.error("Polling error:", err);
+        if (response.data.error === "Website prevents scraping, print to PDF and upload as a file.") {
+          console.log(`Polling error MAX times ${pollingAttempts} for job ${jobId}...`);
+          // Timeout protection
+          clearInterval(pollIntervalRef.current);
+          // Swal.fire({
+          //   title: 'Taking Too Long',
+          //   text: 'The job is taking longer than expected. Please refresh the page later to check.',
+          //   icon: 'info'
+          // });
+        }
+        else {
+          console.error("Polling error:", err);
+          clearInterval(pollIntervalRef.current);
+          Swal.fire({
+            title: 'Error',
+            text: 'An error occurred while checking the job status. Please try again.',
+            icon: 'error'
+          });
+
+        }
       }
     }, 5000); // Poll every 5 seconds
   };
