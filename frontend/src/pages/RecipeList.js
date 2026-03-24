@@ -247,6 +247,7 @@ const handleLogout = () => {
 
       } catch (err) {
         console.error("Polling error:", err);
+        console.error("Polling error1:", err.data.error);
         if (err.data.error === "Website prevents scraping, print to PDF and upload as a file.") {
           console.log(`Polling error MAX times ${pollingAttempts} for job ${jobId}...`);
           // Timeout protection
@@ -258,7 +259,7 @@ const handleLogout = () => {
           // });
         }
         else {
-          console.error("Polling error:", err);
+          console.error("Polling error2:", err);
           clearInterval(pollIntervalRef.current);
           Swal.fire({
             title: 'Error',
