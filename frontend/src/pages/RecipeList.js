@@ -246,9 +246,10 @@ const handleLogout = () => {
         };       
 
       } catch (err) {
+        clearInterval(pollIntervalRef.current);
         console.error("Polling error:", err);
-        console.error("Polling error1:", err.data.error);
-        if (err.data.error === "Website prevents scraping, print to PDF and upload as a file.") {
+        console.error("Polling error1:", err.response.data.error);
+        if (err.response.data.error === "Website prevents scraping, print to PDF and upload as a file.") {
           console.log(`Polling error MAX times ${pollingAttempts} for job ${jobId}...`);
           // Timeout protection
           clearInterval(pollIntervalRef.current);
