@@ -197,7 +197,7 @@ const handleLogout = () => {
 
           Swal.fire({
             title: 'Processing Failed',
-            text: res.data.error || 'Failed to process the recipe. Please try again.',
+            text: res_status.data.error || 'Failed to process the recipe. Please try again. - ' || res_recipes.data.error || ' - An unknown error occurred.',
             icon: 'error',
             confirmButtonText: 'OK'
           });
