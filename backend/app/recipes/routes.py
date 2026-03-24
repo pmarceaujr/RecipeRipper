@@ -106,6 +106,8 @@ def job_status(job_id):
         404  {"error": "Job not found"}           — bad/expired job_id
     """
     job = get_job(job_id)
+    current_app.logger.info(f"Background upload for job {job_id}")
+    current_app.logger.info(f"Job details: {job}")
     if not job:
         return jsonify({"error": "Job not found"}), 404
  

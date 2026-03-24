@@ -169,10 +169,13 @@ const handleLogout = () => {
     pollIntervalRef.current = setInterval(async () => {
       try {
         pollingAttempts++;
+        console.log(`Polling attempt ${pollingAttempts} for job ${jobId}...`);
         const res_recipes = await api.get("/api/recipes");
         const currentRecipes = res_recipes.data || [];
         const res_status = await api.get(`/api/job-status/${jobId}`);
         const status = res_status.data.status;
+        console.log(`Job stataus ${status} for job ${jobId}...`);
+        console.log(`Current recipe count ${currentRecipes.length} vs previous ${prevRecipeCountRef.current}...`);
 
 
         // If count increased → new recipe arrived
@@ -192,6 +195,7 @@ const handleLogout = () => {
           });
         }
         else if (status === 'error') {
+          console.log(`Polling error status ${status} for job ${jobId}...`);
           clearInterval(pollIntervalRef.current);
           pollIntervalRef.current = null;
 
@@ -203,7 +207,7 @@ const handleLogout = () => {
           });
         }
         else if (pollingAttempts === 6) {
-
+          console.log(`Polling error 6 times ${pollingAttempts} for job ${jobId}...`);
             // Show still processing modal
             Swal.fire({
               title: 'Processing Your Recipe',
@@ -217,19 +221,21 @@ const handleLogout = () => {
             });
           }
         else if (pollingAttempts === 12) {
-            // Show still processing it must be a big one
-            Swal.fire({
-              title: 'Processing Your Recipe',
-              html: 'Still extracting text... at 60 seconds.  <br>This must be a complex extraction, it usually does not take this long.',
-              allowOutsideClick: false,
-              allowEscapeKey: false,
-              showConfirmButton: false,
-              didOpen: () => {
-                Swal.showLoading();
-              }
-            });
+          console.log(`Polling error 12 times ${pollingAttempts} for job ${jobId}...`);
+          // Show still processing it must be a big one
+          Swal.fire({
+            title: 'Processing Your Recipe',
+            html: 'Still extracting text... at 60 seconds.  <br>This must be a complex extraction, it usually does not take this long.',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showConfirmButton: false,
+            didOpen: () => {
+              Swal.showLoading();
+            }
+          });
         }
         else if (pollingAttempts >= MAX_ATTEMPTS) {
+          console.log(`Polling error MAX times ${pollingAttempts} for job ${jobId}...`);
           // Timeout protection
           clearInterval(pollIntervalRef.current);
           Swal.fire({
