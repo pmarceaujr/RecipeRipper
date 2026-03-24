@@ -5,7 +5,7 @@ Lightweight Redis-backed job store.
 Each job is a JSON blob stored at  job:<uuid>  with a 1-hour TTL.
 Shape:
     pending  →  {"status": "pending"}
-    done     →  {"status": "done", "recipe_id": <int>, "title": <str>}
+    done     →  {"status": "completed", "recipe_id": <int>, "title": <str>}
     error    →  {"status": "error", "error": <str>}
 
 Usage:

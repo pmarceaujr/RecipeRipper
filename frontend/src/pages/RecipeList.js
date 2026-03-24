@@ -169,14 +169,10 @@ const handleLogout = () => {
     pollIntervalRef.current = setInterval(async () => {
       try {
         pollingAttempts++;
-        console.log(`Polling attempt ${pollingAttempts} for job ${jobId}...`);
         const res_recipes = await api.get("/api/recipes");
         const currentRecipes = res_recipes.data || [];
         const res_status = await api.get(`/api/job-status/${jobId}`);
         const status = res_status.data.status;
-        console.log(`Job stataus ${status} for job ${jobId}...`);
-        console.log(`Current recipe count ${currentRecipes.length} vs previous ${prevRecipeCountRef.current}...`);
-
 
         // If count increased → new recipe arrived
         if (currentRecipes.length > prevRecipeCountRef.current && status === "completed") {
@@ -246,12 +242,8 @@ const handleLogout = () => {
         };       
 
       } catch (err) {
-        // clearInterval(pollIntervalRef.current);
-        // console.error("Polling error:", err);
-        // console.error("Polling error1:", err.response.data.error);
         if (err.response.data.error === "Website prevents scraping, print to PDF and upload as a file.") {
           console.log(`Website prevents scraping, print to PDF and upload as a file.`);
-          // Timeout protection
           clearInterval(pollIntervalRef.current);
           Swal.fire({
             title: 'Website Prevents Scraping',
