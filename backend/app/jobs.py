@@ -45,7 +45,7 @@ def set_result(job_id: str, data: dict) -> None:
     Call this at the end of the background thread when everything succeeded.
     `data` should contain at minimum {"recipe_id": <int>, "title": <str>}.
     """
-    _redis.setex(f"job:{job_id}", TTL, json.dumps({"status": "done", **data}))
+    _redis.setex(f"job:{job_id}", TTL, json.dumps({"status": "completed", **data}))
 
 
 def set_error(job_id: str, message: str) -> None:

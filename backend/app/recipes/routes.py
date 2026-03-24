@@ -107,10 +107,9 @@ def job_status(job_id):
     """
     job = get_job(job_id)
     current_app.logger.info(f"Background upload for job {job_id}")
-    current_app.logger.info(f"Job details: {job}")
+
     if not job:
         return jsonify({"error": "Job not found"}), 404
- 
     status = job["status"]
     if status == "pending":
         return jsonify(job), 202

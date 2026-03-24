@@ -246,21 +246,21 @@ const handleLogout = () => {
         };       
 
       } catch (err) {
-        clearInterval(pollIntervalRef.current);
-        console.error("Polling error:", err);
-        console.error("Polling error1:", err.response.data.error);
+        // clearInterval(pollIntervalRef.current);
+        // console.error("Polling error:", err);
+        // console.error("Polling error1:", err.response.data.error);
         if (err.response.data.error === "Website prevents scraping, print to PDF and upload as a file.") {
-          console.log(`Polling error MAX times ${pollingAttempts} for job ${jobId}...`);
+          console.log(`Website prevents scraping, print to PDF and upload as a file.`);
           // Timeout protection
           clearInterval(pollIntervalRef.current);
-          // Swal.fire({
-          //   title: 'Taking Too Long',
-          //   text: 'The job is taking longer than expected. Please refresh the page later to check.',
-          //   icon: 'info'
-          // });
+          Swal.fire({
+            title: 'Website Prevents Scraping',
+            text: 'The web site prevents scraping. Please print the recipe to a PDF and upload the PDF as a file.',
+            icon: 'info'
+          });
         }
         else {
-          console.error("Polling error2:", err);
+          console.error("Polling error:", err);
           clearInterval(pollIntervalRef.current);
           Swal.fire({
             title: 'Error',
@@ -529,7 +529,7 @@ const handleLogout = () => {
 
 
             {loading && <p className="loading">Loading...</p>}
-            {error && <p className="error-message">{error}</p>}
+            {/* {error && <p className="error-message">{error}</p>} */}
             {message && <p className="status-message">{message}</p>}            
 
             <div className="recipes-grid">
