@@ -93,7 +93,7 @@ def delete_recipe(recipe_id):
         return jsonify({"error": "Failed to delete recipe"}), 500
 
 
-@recipes_bp.route('/jobs/<job_id>', methods=['GET'])
+@recipes_bp.route('/job-status/<job_id>', methods=['GET'])
 @jwt_required()
 def job_status(job_id):
     """
@@ -101,7 +101,7 @@ def job_status(job_id):
  
     Returns:
         202  {"status": "pending"}               — still processing
-        200  {"status": "done", "recipe_id": …}  — finished, recipe is in DB
+        200  {"status": "completed", "recipe_id": …}  — finished, recipe is in DB
         500  {"status": "error", "error": "…"}   — something went wrong
         404  {"error": "Job not found"}           — bad/expired job_id
     """
@@ -112,7 +112,7 @@ def job_status(job_id):
     status = job["status"]
     if status == "pending":
         return jsonify(job), 202
-    if status == "done":
+    if status == "completed":
         return jsonify(job), 200
     return jsonify(job), 500
 

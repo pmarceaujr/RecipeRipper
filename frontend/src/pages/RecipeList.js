@@ -137,7 +137,16 @@ const handleLogout = () => {
   };
 
   // Start polling after upload
-  const startPolling = () => {
+  const startPolling = (jobId) => {
+    if (!jobId) {
+      console.error("No jobId provided for polling");
+      Swal.fire({
+        title: 'Error',
+        text: 'Could not track processing status. <br>Please try your upload again.',
+        icon: 'error'
+      });
+      return;
+    }   
     // Clear any existing interval
     if (pollIntervalRef.current) {
       clearInterval(pollIntervalRef.current);
@@ -155,15 +164,19 @@ const handleLogout = () => {
       }
     });
 
-    var pollingAttempts = 0;
+    let pollingAttempts = 0;
+    const MAX_ATTEMPTS = 36;
     pollIntervalRef.current = setInterval(async () => {
       try {
         pollingAttempts++;
-        const res = await api.get("/api/recipes");
-        const currentRecipes = res.data || [];
+        const res_recipes = await api.get("/api/recipes");
+        const currentRecipes = res_recipes.data || [];
+        const res_status = await api.get(`/api/job-status/${jobId}`);
+        const status = res_status.data.status;
+
 
         // If count increased → new recipe arrived
-        if (currentRecipes.length > prevRecipeCountRef.current) {
+        if (currentRecipes.length > prevRecipeCountRef.current && status === "completed") {
           clearInterval(pollIntervalRef.current);
           pollIntervalRef.current = null;
 
@@ -176,6 +189,17 @@ const handleLogout = () => {
             icon: 'success',
             timer: 2500,
             showConfirmButton: false
+          });
+        }
+        else if (status === 'error') {
+          clearInterval(pollIntervalRef.current);
+          pollIntervalRef.current = null;
+
+          Swal.fire({
+            title: 'Processing Failed',
+            text: res.data.error || 'Failed to process the recipe. Please try again.',
+            icon: 'error',
+            confirmButtonText: 'OK'
           });
         }
         else if (pollingAttempts === 6) {
@@ -204,7 +228,16 @@ const handleLogout = () => {
                 Swal.showLoading();
               }
             });
-          };
+        }
+        else if (pollingAttempts >= MAX_ATTEMPTS) {
+          // Timeout protection
+          clearInterval(pollIntervalRef.current);
+          Swal.fire({
+            title: 'Taking Too Long',
+            text: 'The job is taking longer than expected. Please refresh the page later to check.',
+            icon: 'info'
+          });
+        };       
 
       } catch (err) {
         console.error("Polling error:", err);
@@ -236,8 +269,14 @@ const handleLogout = () => {
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
+      const jobId = response.data.job_id;
 
-      startPolling();      
+      if (jobId) {
+        startPolling(jobId);
+      } else {
+        Swal.fire('Warning', 'Upload started but no tracking ID received.', 'warning');
+        await fetchRecipes();
+      }    
       setSelectedFile(null);
       document.getElementById("fileInput").value = "";
       await fetchRecipes();
@@ -261,8 +300,14 @@ const handleLogout = () => {
         { url }
       );
       console.log(response)
+      const jobId = response.data.job_id;
 
-      startPolling();       
+      if (jobId) {
+        startPolling(jobId);
+      } else {
+        Swal.fire('Warning', 'Upload started but no tracking ID received.', 'warning');
+        await fetchRecipes();
+      }       
       setUrl("");
       await fetchRecipes();
     } catch (err) {
