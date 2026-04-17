@@ -15,6 +15,14 @@ from ..models.direction import Direction
 from ..models.comment import Comment
 from ..utils.database import get_all_recipes, get_recipe_by_id, update_recipe_by_id, delete_recipe, save_recipe   
 from ..utils.parser import *
+import logging
+
+# Configure logging
+logging.basicConfig(
+# filename="C:\\Users\\marceaup\\OneDrive - Illumination Works, llc\\Documents\\Projects\\zCalendarSync\\CalendarSync\\logs\\J1OutlookToGoogleSync.log",
+level=logging.INFO,
+format="%(asctime)s - %(levelname)s - %(funcName)s - %(lineno)d - %(message)s"
+)
 
 recipes_bp = Blueprint('recipes', __name__)
 
@@ -26,43 +34,43 @@ def allowed_file(filename):
 @recipes_bp.route('/recipes', methods=['GET'])
 @jwt_required()
 def get_recipes():
-    current_app.logger.info("Fetching all recipes")
+    logging.info("Fetching all recipes")
     """Get all recipes"""
     try:
         user_id = get_jwt_identity()
-        # current_app.logger.info(f"User ID: {user_id}")
+        # logging.info(f"User ID: {user_id}")
         recipes = get_all_recipes(user_id)
         if not recipes or len(recipes) == 0:
             return jsonify({"msg": "You currently do not have any recipes saved."}), 204         
         return jsonify(recipes)
     except Exception as e:
-        current_app.logger.error(f"Error fetching recipes: {e}")
+        logging.error(f"Error fetching recipes: {e}")
         return jsonify({"error": "Failed to fetch recipes"}), 500
 
 @recipes_bp.route('/recipe/<int:recipe_id>', methods=['GET'])
 @jwt_required()
 def get_recipe(recipe_id):
-    current_app.logger.info(f"Fetching recipe with ID: {recipe_id}")
+    logging.info(f"Fetching recipe with ID: {recipe_id}")
     """Get a single recipe by ID"""
     try:
         user_id = get_jwt_identity()
-        # current_app.logger.info(f"User ID: {user_id}")
+        # logging.info(f"User ID: {user_id}")
         recipe = get_recipe_by_id(recipe_id, user_id)
         if not recipe:
             return jsonify({"error": "Recipe not found"}), 404
         return jsonify(recipe)
     except Exception as e:
-        current_app.logger.error(f"Error fetching recipe {recipe_id}: {e}")
+        logging.error(f"Error fetching recipe {recipe_id}: {e}")
         return jsonify({"error": "Failed to fetch recipe"}), 500
 
 @recipes_bp.route('/recipe/<int:recipe_id>', methods=['PUT'])
 @jwt_required()
 def update_recipe(recipe_id):
-    current_app.logger.info("Updating recipe")
+    logging.info("Updating recipe")
     """Update a recipe"""
     try:
         user_id = get_jwt_identity()
-        # current_app.logger.info(f"User ID: {user_id}")        
+        # logging.info(f"User ID: {user_id}")        
         data = request.get_json()
         if not data:
             return jsonify({"error": "No data provided"}), 400
@@ -71,17 +79,17 @@ def update_recipe(recipe_id):
             return jsonify({"error": "Recipe not found"}), 404
         return jsonify(updated_recipe)
     except Exception as e:
-        current_app.logger.error(f"Error updating recipe {recipe_id}: {e}")
+        logging.error(f"Error updating recipe {recipe_id}: {e}")
         return jsonify({"error": "Failed to update recipe"}), 500
 
 @recipes_bp.route('/recipe/<int:recipe_id>', methods=['DELETE'])
 @jwt_required()
 def delete_recipe(recipe_id):
-    current_app.logger.info("Deleting recipe")
+    logging.info("Deleting recipe")
     """Delete a recipe"""
     try:
         user_id = get_jwt_identity()
-        # current_app.logger.info(f"User ID: {user_id}")
+        # logging.info(f"User ID: {user_id}")
         recipe = Recipe.query.filter_by(id=recipe_id, user_id=user_id).first()
         if not recipe:
             return jsonify({"error": "Recipe not found"}), 404
@@ -89,7 +97,7 @@ def delete_recipe(recipe_id):
         db.session.commit()
         return jsonify({"message": "Recipe deleted successfully"})
     except Exception as e:
-        current_app.logger.error(f"Error deleting recipe {recipe_id}: {e}")
+        logging.error(f"Error deleting recipe {recipe_id}: {e}")
         return jsonify({"error": "Failed to delete recipe"}), 500
 
 
@@ -106,7 +114,7 @@ def job_status(job_id):
         404  {"error": "Job not found"}           — bad/expired job_id
     """
     job = get_job(job_id)
-    current_app.logger.info(f"Background upload for job {job_id}")
+    logging.info(f"Background upload for job {job_id}")
 
     if not job:
         return jsonify({"error": "Job not found"}), 404
@@ -121,11 +129,11 @@ def job_status(job_id):
 @recipes_bp.route('/recipes/upload', methods=['POST'])
 @jwt_required()
 def upload_recipe():
-    current_app.logger.info("Adding recipe from file")
+    logging.info("Adding recipe from file")
     """Upload and parse a recipe file"""
     try:
         user_id = get_jwt_identity()
-        # current_app.logger.info(f"User ID: {user_id}")
+        # logging.info(f"User ID: {user_id}")
         if 'file' not in request.files:
             return jsonify({"error": "No file provided"}), 400
         file = request.files['file']
@@ -146,7 +154,6 @@ def upload_recipe():
 
         def run():
             try:
-                # current_app.logger.info("Extracting text from file")
                 # Extract text based on type
                 ext = os.path.splitext(filename)[1].lower()
                 if ext in {'.jpg', '.jpeg', '.png'}:
@@ -156,9 +163,6 @@ def upload_recipe():
                 else:  # .txt
                     text = parse_from_file(file_path, filename)
 
-                # current_app.logger.info(f"Extracted text: {text}")  # Log first 200 chars of extracted text for debugging
-                # Parse into structured recipe
-                # current_app.logger.info("Parsing recipe from image")
                 recipe_data = parse_recipe_text(text, recipe_source=filename, is_file=True)
 
                 with app.app_context():
@@ -169,69 +173,31 @@ def upload_recipe():
                     "title": recipe_data.get("title", "Untitled"),
                 })
 
-
-                # Save to DB
-                # recipe_id = save_recipe(recipe_data, user_id=user_id)
-
-                # update_job(job_id, status="done", recipe_id=recipe_id)
-
             except Exception as e:
-                app.logger.error(f"Background upload failed for job {job_id}: {e}")
+                logging.error(f"Background upload failed for job {job_id}: {e}")
                 set_error(job_id, str(e))
 
             finally:
                 # Always clean up uploaded file
                 try:
                     if os.path.exists(file_path):
+                        logging.info("Deleting local file")
                         os.remove(file_path)
                 except Exception as cleanup_error:
-                    app.logger.warning(f"Failed to delete temp file {file_path}: {cleanup_error}")
+                    logging.warning(f"Failed to delete temp file {file_path}: {cleanup_error}")
         threading.Thread(target=run, daemon=True).start()
     
         return jsonify({"job_id": job_id}), 202                    
-    #     try:
-    #         # Extract text based on type
-    #         ext = os.path.splitext(filename)[1].lower()
-    #         if ext in {'.jpg', '.jpeg', '.png'}:
-    #             text = extract_text_from_image(file_path)
-    #         elif ext == '.pdf':
-    #             text = extract_text_from_pdf(file_path, filename)
-    #         else:  # .txt
-    #             text = parse_from_file(file_path, filename)
 
-    #         # current_app.logger.info(f"Extracted text: {text}")  # Log first 200 chars of extracted text for debugging
-    #         # Parse into structured recipe
-    #         # current_app.logger.info("Parsing recipe from image")
-    #         recipe_data = parse_recipe_text(text, recipe_source=filename, is_file=True)
-
-    #         # Save to DB
-    #         recipe_id = save_recipe(recipe_data, user_id=user_id)
-
-    #         return jsonify({
-    #             "message": "Recipe added successfully",
-    #             "recipe_id": recipe_id,
-    #             "title": recipe_data.get('title', 'Untitled')
-    #         })
-
-
-    #     except Exception as e:
-    #         current_app.logger.error(f"Upload failed: {e}")
-    #         return jsonify({"error": "Failed to extract text from file"}), 500
     except Exception as e:
-            current_app.logger.error(f"Upload failed: {e}")
+            logging.error(f"Upload failed: {e}")
             return jsonify({"error": "Failed to process upload"}), 500        
-    finally:
-        # Always clean up uploaded file
-        try:
-            if os.path.exists(file_path):
-                os.remove(file_path)
-        except Exception as cleanup_error:
-            current_app.logger.warning(f"Failed to delete temp file {file_path}: {cleanup_error}")    
+
 
 @recipes_bp.route('/recipes/from-url', methods=['POST'])
 @jwt_required()
 def add_from_url():
-    current_app.logger.info("Adding recipe from URL")
+    logging.info("Adding recipe from URL")
     """Add recipe by scraping a URL"""
     try:
         user_id = get_jwt_identity()
@@ -243,19 +209,21 @@ def add_from_url():
             return jsonify({"error": "No URL provided"}), 400
         
         job_id = create_job()
+        logging.info("1")
         app = current_app._get_current_object()
 
         def run():
             try:
+                print("31")
                 scraped_text = scrape_url(url)
                 if not scraped_text.strip():
                     raise Exception("Could not extract text from URL")
-                # current_app.logger.info("Parsing recipe from URL")
+                # logging.info("Parsing recipe from URL")
                 recipe_data = parse_recipe_text(scraped_text, recipe_source=url, is_file=False)
-
+                logging.info("3")
                 with app.app_context():
                     recipe_id = save_recipe(recipe_data, user_id=user_id) 
-
+                
                 set_result(job_id, {
                     "recipe_id": recipe_id,
                     "title": recipe_data.get("title", "Untitled"),
@@ -263,11 +231,13 @@ def add_from_url():
 
             except Exception as e:
                 err_str = str(e)
-                app.logger.error(f"Background URL import failed for job {job_id}: {e}")
+                logging.error(f"Background URL import failed for job {job_id}: {e}")
     
                 if 'Failed to scrape URL: 402 Client Error:' in err_str:
                     set_error(job_id, "Website prevents scraping, print to PDF and upload as a file.")
                     # return jsonify({"error": "Website prevents scraping, print to PDF and upload as a file."}), 402
+                elif 'Failed to scrape URL: 403 Client Error' in err_str:
+                    set_error(job_id, "Website prevents scraping, print to PDF and upload as a file.")
                 else:
                     set_error(job_id, err_str)
                     # return jsonify({"error": "Failed to import from URL"}), 500
@@ -275,32 +245,17 @@ def add_from_url():
         threading.Thread(target=run, daemon=True).start()
     
         return jsonify({"job_id": job_id}), 202
-    
-        # scraped_text = scrape_url(url)
-        # if not scraped_text.strip():
-        #     return jsonify({"error": "Could not extract text from URL"}), 400
-        # # current_app.logger.info("Parsing recipe from URL")
-        # recipe_data = parse_recipe_text(scraped_text, recipe_source=url, is_file=False)
-        # # current_app.logger.info("Parsed recipe data:")
-        # recipe_id = save_recipe(recipe_data, user_id=user_id)
-
-        # return jsonify({
-        #     "message": "Recipe added successfully from URL",
-        #     "recipe_id": recipe_id,
-        #     "title": recipe_data.get('title', 'Untitled')
-        # })
 
     except HTTPError as http_err:
             status_code = http_err.response.status_code
             if status_code == 402:
                 # Payment Required — most likely quota/credits exhausted on your scraping service
-                current_app.logger.info(f"Payment Required (402) — API/scraping service blocked")
-                return jsonify({"error": "Scraping blocked, current_app.logger.info to PDF and upload."}), 402
-
+                logging.info(f"Payment Required (402) — API/scraping service blocked")
+                return jsonify({"error": "Scraping blocked, logging.info to PDF and upload."}), 402
 
     except Exception as e:
         if 'Failed to scrape URL: 402 Client Error:' in str(e):
-            current_app.logger.info(f"URL import failed: Payment Required (402) — API/scraping service blocked, fullerror text: {e}")
+            logging.info(f"URL import failed: Payment Required (402) — API/scraping service blocked, fullerror text: {e}")
             return jsonify({"error": "Website prevents scraping, print to PDF and upload as a file."}), 402
-        current_app.logger.error(f"URL import failed: {e}")
+        logging.error(f"URL import failed: {e}")
         return jsonify({"error": "Failed to import from URL"}), 500
