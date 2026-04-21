@@ -385,7 +385,7 @@ const handleLogout = () => {
       <header className="App-header">
         <div className="header-content">
 
-        <h1>🍳 The Recipe Ripper Database</h1>
+          <h1>🍳 The Recipe Ripper Database <span style={{ fontSize: ".27EM" }}>v:7.5.1</span></h1> 
           <button className="auth-button"
             onClick={isLoggedIn ? handleLogout : handleLogin}
         >
