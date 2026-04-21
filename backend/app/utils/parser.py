@@ -332,4 +332,4 @@ def parse_from_file(file_content, filename=None):
     """Parse recipe from uploaded file content"""
     # For now, treat as plain text
     # Could add PDF/DOCX support later with additional libraries
-    return parse_recipe_text(file_content, source_url=f"file://{filename}")
+    return parse_recipe_text(file_content, recipe_source=f"file://{filename}", is_file=True)
