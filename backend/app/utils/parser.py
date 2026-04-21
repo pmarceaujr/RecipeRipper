@@ -328,8 +328,23 @@ def parse_recipe_text(text, recipe_source=None, is_file=True):
     except Exception as e:
         raise Exception(f"Failed to parse recipe: {str(e)}")
 
-def parse_from_file(file_content, filename=None):
-    """Parse recipe from uploaded file content"""
-    # For now, treat as plain text
-    # Could add PDF/DOCX support later with additional libraries
-    return parse_recipe_text(file_content, recipe_source=f"file://{filename}", is_file=True)
+def parse_from_file(file_path, filename=None):
+    """
+    Reads the entire content of a text file and returns it as a string.
+    
+    :param filename: Path to the .txt file
+    :return: String containing the file content
+    :raises FileNotFoundError: If the file does not exist
+    :raises IOError: If there is an error reading the file
+    """
+    try:
+        # Open the file in read mode with UTF-8 encoding
+        with open(file_path, 'r', encoding='utf-8') as file:
+            content = file.read()
+        return content
+    except FileNotFoundError:
+        print(f"Error: File '{file_path}' not found.")
+        raise
+    except IOError as e:
+        print(f"Error reading file '{file_path}': {e}")
+        raise
