@@ -88,11 +88,22 @@ export default function RecipeList() {
       setFilteredRecipes(null); // show all
       return;
     }
-    const filtered = recipes.filter(recipe => {
-      const value = recipe[searchCategory];
-      if (value === undefined || value === null) return false;
-      return String(value).toLowerCase() === searchValue.toLowerCase();
-    });
+
+
+    let filtered;
+
+    if (searchCategory === "name") {
+      filtered = recipes.filter(recipe =>
+        recipe.title &&
+        recipe.title.toLowerCase().includes(searchValue.toLowerCase())
+      );
+    } else {
+      filtered = recipes.filter(recipe => {
+        const value = recipe[searchCategory];
+        if (value === undefined || value === null) return false;
+        return String(value).toLowerCase() === searchValue.toLowerCase();
+      });
+    }
 
     setFilteredRecipes(filtered);
     setCurrentPage(1); // Reset to page 1 on filter change
@@ -480,27 +491,38 @@ const handleLogout = () => {
                   style={{ padding: '0.5rem', minWidth: '140px', fontSize: '1rem' }}
                 >
                   <option value="">All categories</option>
+                  <option value="title">Recipe Name</option>
                   <option value="course">Course</option>
                   <option value="cuisine">Cuisine</option>
                   <option value="primary_ingredient">Main Ingredient</option>
                   {/* Add more filter types later if needed */}
                 </select>
 
-                <select
-                  value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
-                  disabled={!searchCategory}
-                  style={{ padding: '0.5rem', minWidth: '180px', fontSize: '1rem' }}
-                >
-                  <option value="">
-                    {loadingValues ? 'Loading...' : 'Select value...'}
-                  </option>
-                  {availableValues.map((val) => (
-                    <option key={val} value={val}>
-                      {val}
-                    </option>
-                  ))}
-                </select>
+                {searchCategory === "name" ? (
+                  <input
+                    type="text"
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
+                    placeholder="Recipe name contains..."
+                    style={{ padding: '0.5rem', minWidth: '180px', fontSize: '1rem' }}
+                  />
+                ) : (
+                    <select
+                      value={searchValue}
+                      onChange={(e) => setSearchValue(e.target.value)}
+                      disabled={!searchCategory}
+                      style={{ padding: '0.5rem', minWidth: '180px', fontSize: '1rem' }}
+                    >
+                      <option value="">
+                        {loadingValues ? 'Loading...' : 'Select value...'}
+                      </option>
+                      {availableValues.map((val) => (
+                        <option key={val} value={val}>
+                          {val}
+                        </option>
+                      ))}
+                    </select>
+                )}
 
                 {/* {(searchCategory || searchValue) && (
                   <button
