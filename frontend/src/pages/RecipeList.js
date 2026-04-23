@@ -97,7 +97,14 @@ export default function RecipeList() {
         recipe.title &&
         recipe.title.toLowerCase().includes(searchValue.toLowerCase())
       );
-    } else {
+    }
+    else if (searchCategory === "ingredients") {
+      filtered = recipes.filter(recipe =>
+        recipe.title &&
+        recipe.title.toLowerCase().includes(searchValue.toLowerCase())
+      );
+    }
+    else {
       filtered = recipes.filter(recipe => {
         const value = recipe[searchCategory];
         if (value === undefined || value === null) return false;
@@ -492,6 +499,7 @@ const handleLogout = () => {
                 >
                   <option value="">All categories</option>
                   <option value="name">Recipe Name</option>
+                  <option value="ingredients">ingredients</option>
                   <option value="title">Recipe List</option>
                   <option value="course">Course</option>
                   <option value="cuisine">Cuisine</option>
@@ -507,7 +515,15 @@ const handleLogout = () => {
                     placeholder="Recipe name contains..."
                     style={{ padding: '0.5rem', minWidth: '180px', fontSize: '1rem' }}
                   />
-                ) : (
+                ) : searchCategory === "ingredients" ? (
+                  <input
+                    type="text"
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
+                    placeholder="Ingredients contain..."
+                    style={{ padding: '0.5rem', minWidth: '180px', fontSize: '1rem' }}
+                  />
+                  ) : (
                     <select
                       value={searchValue}
                       onChange={(e) => setSearchValue(e.target.value)}
