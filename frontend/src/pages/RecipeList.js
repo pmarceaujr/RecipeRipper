@@ -389,7 +389,7 @@ const handleLogout = () => {
           <button className="auth-button"
             onClick={isLoggedIn ? handleLogout : handleLogin}
         >
-          {isLoggedIn ? "Login" : "Logout"}
+            {isLoggedIn ? "Logout" : "Login"}
           </button>
         </div>
       </header>   
