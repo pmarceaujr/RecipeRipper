@@ -92,7 +92,7 @@ export default function RecipeList() {
 
     let filtered;
 
-    if (searchCategory === "title") {
+    if (searchCategory === "name") {
       filtered = recipes.filter(recipe =>
         recipe.title &&
         recipe.title.toLowerCase().includes(searchValue.toLowerCase())
@@ -491,15 +491,15 @@ const handleLogout = () => {
                   style={{ padding: '0.5rem', minWidth: '140px', fontSize: '1rem' }}
                 >
                   <option value="">All categories</option>
-                  <option value="title">Recipe Name</option>
-                  <option value="titleList">Recipe List</option>
+                  <option value="name">Recipe Name</option>
+                  <option value="title">Recipe List</option>
                   <option value="course">Course</option>
                   <option value="cuisine">Cuisine</option>
                   <option value="primary_ingredient">Main Ingredient</option>
                   {/* Add more filter types later if needed */}
                 </select>
 
-                {searchCategory === "title" ? (
+                {searchCategory === "name" ? (
                   <input
                     type="text"
                     value={searchValue}
