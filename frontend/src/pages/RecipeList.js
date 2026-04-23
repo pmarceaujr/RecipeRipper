@@ -492,6 +492,7 @@ const handleLogout = () => {
                 >
                   <option value="">All categories</option>
                   <option value="title">Recipe Name</option>
+                  <option value="titleList">Recipe List</option>
                   <option value="course">Course</option>
                   <option value="cuisine">Cuisine</option>
                   <option value="primary_ingredient">Main Ingredient</option>
