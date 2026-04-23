@@ -92,7 +92,7 @@ export default function RecipeList() {
 
     let filtered;
 
-    if (searchCategory === "name") {
+    if (searchCategory === "title") {
       filtered = recipes.filter(recipe =>
         recipe.title &&
         recipe.title.toLowerCase().includes(searchValue.toLowerCase())
