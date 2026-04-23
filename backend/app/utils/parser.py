@@ -5,10 +5,16 @@ import os
 import json
 import re
 import base64
+import time
 from PyPDF2 import PdfReader
 from PIL import Image
 import io
 import boto3
+from botocore.exceptions import ClientError
+from flask import current_app
+import logging
+
+logger = logging.getLogger(__name__)
 
 # AWS Credentials
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
@@ -20,9 +26,9 @@ S3_BUCKET = os.getenv("S3_BUCKET")
 openai.api_key = os.getenv("OPENAI_API_KEY")
 openai.api_key = os.getenv('OPENAI_API_KEY')
 if not openai.api_key:
-    print("Warning: OPENAI_API_KEY is not set in environment variables.")
+    logger.info("Warning: OPENAI_API_KEY is not set in environment variables.")
 else:
-    print(f"OPENAI_API_KEY found: ...{openai.api_key[-10:]}")  # Print first 10 chars for verification
+    logger.info(f"OPENAI_API_KEY found: ...{openai.api_key[-10:]}")  # Print first 10 chars for verification
 
 # Initialize AWS clients
 s3 = boto3.client(
@@ -39,7 +45,7 @@ textract = boto3.client(
 )
 
 def scrape_url(url):
-    print("Scraping URL...")
+    logger.info("Scraping URL...")
     """Scrape recipe content from a URL"""
     try:
         headers = {
@@ -66,47 +72,54 @@ def scrape_url(url):
         raise Exception(f"Failed to scrape URL: {str(e)}")
 
 def extract_text_from_pdf(file_path, filename):
-    print("Initializing PDF text extraction...")
+    logger.info("Initializing PDF text extraction...")
     """Extract text from PDF file"""
     try:
         # Check if PDF has embedded text
-        # pdf_path = Path(pdf_path)
         reader = PdfReader(file_path)        
         if any(page.extract_text() for page in reader.pages):
-            print("Text-based PDF detected")
-            # reader = PdfReader(file_path)
-            # print("read pdf")
-            # print(f"Number of pages: {len(reader.pages)}")
+            logger.info("Text-based PDF detected")
             text = ""
             for page in reader.pages:
                 text += page.extract_text() + "\n"
-                # print(f"Extracted text from PDF: {text}")  # Debugging line
             return text
         else:
-            print("Scanned PDF detected — running Textract OCR")
-            # print(f"Uploading {file_path} to S3...")
-            # print(f"S3 bucket: {S3_BUCKET}")
-            # print(f"File name: {filename}")
+            logger.info("Scanned PDF detected — running Textract OCR")
             # Upload PDF to S3
             s3.upload_file(str(file_path), S3_BUCKET, filename)
-
             # Call Textract
-            response = textract.detect_document_text(
-                Document={'S3Object': {'Bucket': S3_BUCKET, 'Name': filename}}
+            # Start asynchronous job
+            response = textract.start_document_text_detection(
+                DocumentLocation={'S3Object': {'Bucket': S3_BUCKET, 'Name': filename}}
             )
+            textract_job_id = response['JobId']
 
-            # Delete PDF from S3 after processing
-            s3.delete_object(Bucket=S3_BUCKET, Key=filename)
-            # Combine lines of text
-            lines = [block["Text"] for block in response["Blocks"] if block["BlockType"] == "LINE"]
-            # print(f"Extracted text from Textract: {lines}")  # Debugging line
-            return "\n".join(lines)
+            # Wait for job to complete (simple polling - improve with SNS/SQS for production)
+            while True:
+                status = textract.get_document_text_detection(JobId=textract_job_id)
+                job_status = status['JobStatus']
+
+                if job_status in ['SUCCEEDED', 'FAILED']:
+                    break
+                time.sleep(5)  # Poll every 5 seconds
+
+            if job_status == 'FAILED':
+                raise Exception(f"Textract job failed: {status.get('StatusMessage')}")
+
+            # Extract text from all pages
+            full_text = []
+            for block in status.get('Blocks', []):
+                if block['BlockType'] == 'LINE':
+                    full_text.append(block['Text'])
+
+            return "\n".join(full_text)
+
     except Exception as e:
-        print(f"Error extracting text from PDF: {str(e)}")
+        logger.error(f"Error extracting text from PDF: {str(e)}")
         raise Exception(f"Failed to extract text from PDF: {str(e)}")
 
 def extract_text_from_image(file_path):
-    print("Initializing image text extraction...")
+    logger.info("Initializing image text extraction...")
     """Extract text from image using OpenAI Vision API"""
     try:
         # Read and encode image
@@ -143,7 +156,7 @@ def extract_text_from_image(file_path):
             ],
             max_tokens=2000
         )
-        # print(f"OpenAI Vision response: {response}")  # Debugging line
+
         return response.choices[0].message.content
         
     except Exception as e:
@@ -151,7 +164,7 @@ def extract_text_from_image(file_path):
 
 
 def parse_recipe_text(text, recipe_source=None, is_file=True):
-    print("Parsing recipe text...")  # Debugging line
+    logger.info("Parsing recipe text...")  # Debugging line
     """Use OpenAI to parse recipe text into structured format"""
     try:
         prompt = f"""Extract recipe information from the following text and return ONLY valid JSON with this exact structure
@@ -277,93 +290,9 @@ def parse_recipe_text(text, recipe_source=None, is_file=True):
         Text:
         {text}
         """        
-        # prompt = f"""Extract recipe information from the following text and return ONLY valid JSON with this exact structure
-        # (no markdown, no code blocks, just raw JSON).
+       
 
-        # IMPORTANT:
-        # - Ingredients MUST be extracted verbatim as they appear in the text.
-        # - Directions MUST be rewritten into neutral, functional cooking steps.
-        # - Do NOT copy phrasing from the original directions.
-        # - Do NOT use expressive, descriptive, or narrative language in directions.
-        # - Preserve cooking order, timing, temperatures, and techniques exactly.
-        # - Use short, clear, instructional sentences.
-
-        # JSON STRUCTURE (EXACT):
-        # {{
-        # "title": "recipe name",
-        # "course": "one category: Breakfast, Lunch, Dinner, Dessert, Appetizer, Snack, Beverage, or Baking",
-        # "cuisine": "one category: American, Italian, Mexican, Chinese, Indian, French, German, Japanese, Thai, or Other",
-        # "prep_time": "time in minutes",
-        # "cook_time": "time in minutes",
-        # "total_time": "time in minutes",
-        # "servings": "number of servings",
-        # "primary_ingredient": "one choice: Beef, Chicken, Pork, Vegetables, Fish, Dairy, Grains, Pasta, Lamb, Venison, Bear, Moose, or Other",
-        # "ingredients": [
-        #     {{"ingredient": "all-purpose flour", "quantity": "2", "unit": "cups"}},
-        #     {{"ingredient": "granulated sugar", "quantity": "1", "unit": "cup"}},
-        #     {{"ingredient": "large eggs", "quantity": "3", "unit": ""}},
-        #     {{"ingredient": "tomate sauce", "quantity": "2", "unit": "(8 oz cans)"}},
-        #     {{"ingredient": "vanilla extract", "quantity": "1", "unit": "tsp"}}
-        # ],
-        # "directions": [
-        #     {{"step_number": 1, "instruction": "Preheat oven to 350°F"}},
-        #     {{"step_number": 2, "instruction": "Mix dry ingredients in a bowl"}}
-        # ],
-        # "comments": []
-        # }}
-
-        # DIRECTION REWRITE RULES (MANDATORY):
-        # - Rewrite EVERY step; do NOT summarize or omit steps.
-        # - Do NOT reuse sentence structure or phrasing from the source.
-        # - Replace descriptive language with functional equivalents.
-        # - Output numbered steps starting at 1.
-        # - Do NOT mention the original source.
-        # - Do NOT add or remove ingredients or steps.
-
-        # UNIT NORMALIZATION (MANDATORY):
-        # All ingredient units MUST be converted to one of the following standard abbreviations.
-        # If the source text uses ANY other wording, convert it using this table.
-
-        # - teaspoon, teaspoons, tsp., tsps → "tsp"
-        # - tablespoon, tablespoons, tbsp., tbsps → "tbsp"
-        # - cup → "cup"
-        # - cups → "cups"
-        # - can → "can"
-        # - cans → "cans"
-        # - ounce, ounces, oz., ozs → "oz"
-        # - pound, pounds, lb., lbs → "lb"
-        # - gram, grams, g → "g"
-        # - kilogram, kilograms, kg → "kg"
-        # - milliliter, milliliters, ml → "ml"
-        # - liter, liters, l → "l"
-        # - pinch, pinches → "pinch"
-        # - dash, dashes → "dash"
-        # - clove, cloves → "clove"
-
-        # ❗ DO NOT output full unit words (e.g., "teaspoon", "tablespoon").
-        # ❗ DO NOT invent units.
-        # ❗ If no unit is provided in the text, use an empty string "".
-
-        # CRITICAL INGREDIENT RULES:
-        # 1. Extract ALL ingredients — do not skip any.
-        # 2. Parse quantities carefully: "1 tablespoon" → quantity="1", unit="tbsp".
-        # 3. Keep descriptors with the ingredient name: "large sweet potatoes", "can" or "cans".
-        # 4. If an ingredient has no quantity or unit, set them to empty string "".
-        # 5. Units MUST strictly follow the Unit Normalization table.
-        # 6. Preserve preparation notes in the ingredient name: "peeled and diced".
-        # 7. Return ONLY the JSON object — no explanations, no markdown.
-
-        # FINAL VALIDATION RULE:
-        # Before returning the JSON, verify that EVERY ingredient.unit value is either:
-        # - one of the allowed abbreviations, or
-        # - an empty string "".
-        # If not, correct it.
-
-        # Text:
-        # {text}
-        # """
-
-        print("Prompt complete")  # Debugging line
+        logger.info("Prompt complete")  # Debugging line
         response = openai.chat.completions.create(
             model="gpt-4o-mini",  # Fast and accurate - or use "gpt-4o" for best results
             messages=[
@@ -373,9 +302,8 @@ def parse_recipe_text(text, recipe_source=None, is_file=True):
             temperature=0.1,  # Lower temperature = more consistent
             max_tokens=3000
         )
-        print("OpenAI response")  # Debugging line
+
         content = response.choices[0].message.content.strip()
-        print("OpenAI content")  # Debugging line
         # Remove markdown code blocks if present
         content = re.sub(r'^```json\s*|\s*```$', '', content, flags=re.MULTILINE)
         content = content.strip()
@@ -392,7 +320,6 @@ def parse_recipe_text(text, recipe_source=None, is_file=True):
             recipe_data['is_url'] = 1
         else:
             recipe_data['is_url'] = 0
-
         
         return recipe_data
         
@@ -401,8 +328,23 @@ def parse_recipe_text(text, recipe_source=None, is_file=True):
     except Exception as e:
         raise Exception(f"Failed to parse recipe: {str(e)}")
 
-def parse_from_file(file_content, filename=None):
-    """Parse recipe from uploaded file content"""
-    # For now, treat as plain text
-    # Could add PDF/DOCX support later with additional libraries
-    return parse_recipe_text(file_content, source_url=f"file://{filename}")
+def parse_from_file(file_path, filename=None):
+    """
+    Reads the entire content of a text file and returns it as a string.
+    
+    :param filename: Path to the .txt file
+    :return: String containing the file content
+    :raises FileNotFoundError: If the file does not exist
+    :raises IOError: If there is an error reading the file
+    """
+    try:
+        # Open the file in read mode with UTF-8 encoding
+        with open(file_path, 'r', encoding='utf-8') as file:
+            content = file.read()
+        return content
+    except FileNotFoundError:
+        print(f"Error: File '{file_path}' not found.")
+        raise
+    except IOError as e:
+        print(f"Error reading file '{file_path}': {e}")
+        raise

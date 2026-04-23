@@ -1,17 +1,33 @@
 # app/auth/routes.py
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from ..extensions import db
 from ..models.user import User
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from flask_mail import Mail, Message  # For reset
 import os
 import requests
+import logging
+
+# Configure logging
+logging.basicConfig(
+# filename="C:\\Users\\marceaup\\OneDrive - Illumination Works, llc\\Documents\\Projects\\zCalendarSync\\CalendarSync\\logs\\J1OutlookToGoogleSync.log",
+level=logging.INFO,
+format="%(asctime)s - %(levelname)s - %(funcName)s - %(lineno)d - %(message)s"
+)
+
+# Log messages
+# logging.debug("This is a debug message")
+# logging.info("This is an info message")
+# logging.warning("This is a warning message")
+# logging.error("This is an error message")
+# logging.critical("This is a critical message")
 
 auth_bp = Blueprint('auth', __name__)
 mail = Mail()  # Init in factory if needed
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
+    logging.info("In Register Function")
     data = request.json
 
     # Extract token
@@ -50,7 +66,7 @@ def register():
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
-    print("Inside login function")
+    logging.info("In Login Function")
     data = request.json
     user = User.query.filter_by(email=data['userId']).first()
     if not user:

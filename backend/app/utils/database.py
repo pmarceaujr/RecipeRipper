@@ -7,7 +7,16 @@ from ..models.ingredient import Ingredient
 from ..models.direction import Direction
 from ..models.comment import Comment
 from datetime import datetime
+from flask import current_app
 import os
+import logging
+
+# Configure logging
+logging.basicConfig(
+# filename="C:\\Users\\marceaup\\OneDrive - Illumination Works, llc\\Documents\\Projects\\zCalendarSync\\CalendarSync\\logs\\J1OutlookToGoogleSync.log",
+level=logging.INFO,
+format="%(asctime)s - %(levelname)s - %(funcName)s - %(lineno)d - %(message)s"
+)
 
 # # Database setup
 # DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///recipes.db')
@@ -24,10 +33,10 @@ import os
 #     return Session()
 
 def save_recipe(recipe_data, user_id):
-    print("Inside save_recipe function")
+    logging.info("Inside save_recipe function")
     """Save a parsed recipe to the database"""
     try:
-        print("Inside save_recipe try function")
+        logging.info("Inside save_recipe try function")
         # Create recipe
         recipe = Recipe(
             title=recipe_data['title'],
@@ -73,17 +82,17 @@ def save_recipe(recipe_data, user_id):
                 db.session.add(comments)
 
         db.session.commit()
-        print("Exiting save_recipe function")
+        # logging.info("Exiting save_recipe function")
         return recipe.id
     except Exception as e:
         db.session.rollback()
-        print(f"Error saving recipe: {e}")
+        logging.error(f"Error saving recipe: {e}")
         raise e
 
 
 def get_all_recipes(user_id):
     """Get all recipes with their ingredients and directions"""
-    print("Inside get_all_recipes function")
+    logging.info("Inside get_all_recipes function")
     # user_id_= int(user_id)
     try:
         recipe_data = Recipe.query.filter_by(user_id=user_id).order_by(Recipe.created_at.desc())
@@ -97,13 +106,13 @@ def get_all_recipes(user_id):
             return recipe_data
 
     except Exception as e:
-        print(f"Error getting recipe: {e}")
+        logging.error(f"Error getting recipe: {e}")
         raise e
 
 
 def get_recipe_by_id(recipe_id, user_id):
     """Get a recipe by ID"""
-    print("Inside get_recipe_by_id function")
+    logging.info("Inside get_recipe_by_id function")
     recipe_data = Recipe.query.filter_by(id=recipe_id, user_id=user_id).first()      
 
     result = []
@@ -111,16 +120,16 @@ def get_recipe_by_id(recipe_id, user_id):
         recipe_dict = serialize_recipe(recipe_data)
         return recipe_dict
     except Exception as e:
-        print(f"Error getting recipe: {e}")
+        logging.error(f"Error getting recipe: {e}")
         raise e
 
 def update_recipe_by_id(recipe_id, user_id, data):
-    print("Inside update_recipe function")
+    logging.info("Inside update_recipe function")
     try:
         recipe = Recipe.query.filter_by(id=recipe_id, user_id=user_id).first()
         if not recipe:
             return None
-        print("Inside update_recipe try function")
+        # logging.info("Inside update_recipe try function")
         recipe.title = data.get("title", recipe.title)
         recipe.course = data.get("course", recipe.course)
         recipe.cuisine = data.get("cuisine", recipe.cuisine)
@@ -131,15 +140,15 @@ def update_recipe_by_id(recipe_id, user_id, data):
         recipe.primary_ingredient = data.get("primary_ingredient", recipe.primary_ingredient)
         recipe.recipe_source = data.get("recipe_source", recipe.recipe_source)
         recipe.is_url = data.get("is_url", recipe.is_url)
-        print("Before db.session.add")
+        # logging.info("Before db.session.add")
         # Remove old ingredients and directions
         db.session.query(Ingredient).filter_by(recipe_id=recipe.id).delete(synchronize_session=False)
         db.session.query(Direction).filter_by(recipe_id=recipe.id).delete(synchronize_session=False)
         db.session.query(Comment).filter_by(recipe_id=recipe.id).delete(synchronize_session=False)
-        print("Before db.session.commit")
+        # logging.info("Before db.session.commit")
         # --- Ingredients ---
         if "ingredients" in data:
-            print("Inside update_recipe ingredients function")
+            logging.info("Inside update_recipe ingredients function")
             # Add new ingredients
             for ing_data in data["ingredients"]:
                 new_ing = Ingredient(
@@ -152,7 +161,7 @@ def update_recipe_by_id(recipe_id, user_id, data):
 
         # --- Directions ---
         if "directions" in data:
-            print("Inside update_recipe directions function")
+            logging.info("Inside update_recipe directions function")
             # Add new directions
             for dir_data in data["directions"]:
                 new_dir = Direction(
@@ -164,7 +173,7 @@ def update_recipe_by_id(recipe_id, user_id, data):
 
         # --- Comments ---
         if "comments" in data:
-            print("Inside update_recipe comments function")
+            logging.info("Inside update_recipe comments function")
            # Add new comments
             for comment_data in data["comments"]:
                 new_comment = Comment(
@@ -184,6 +193,7 @@ def update_recipe_by_id(recipe_id, user_id, data):
 
 
 def delete_recipe(recipe_id):
+    logging.info("Inside Delete fucntion")
     session = get_session()
     try:
         recipe = session.query(Recipe).filter_by(id=recipe_id).first()
