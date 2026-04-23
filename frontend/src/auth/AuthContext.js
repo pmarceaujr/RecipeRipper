@@ -25,11 +25,11 @@ export function AuthProvider({ children }) {
     setToken(null);
   };
 
-  const isAuthenticated = !!token;
+  const isLoggedIn = !!token;
 
   return (
     <AuthContext.Provider
-      value={{ token, login, logout, isLoggedIn: isAuthenticated, loading }}
+      value={{ token, login, logout, isLoggedIn, loading }}
     >
       {children}
     </AuthContext.Provider>
