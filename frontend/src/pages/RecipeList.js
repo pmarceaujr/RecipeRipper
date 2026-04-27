@@ -4,7 +4,7 @@ import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css'; // optional but makes it look nice
 import api from "../api/axios";
 import { useAuth } from "../auth/AuthContext";
-import { showAlert } from "../utils/alerts";
+// import { showAlert } from "../utils/alerts";
 
 // import "../App.css";
 
@@ -17,136 +17,158 @@ export default function RecipeList() {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [uploadError, setUploadError] = useState("");
   const [message, setMessage] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const { logout, isLoggedIn } = useAuth();
   const navigate = useNavigate();
+  // Search filter states
   const [searchCategory, setSearchCategory] = useState("");
   const [searchValue, setSearchValue] = useState("");
-  const [availableValues, setAvailableValues] = useState([]);
-  const [loadingValues, setLoadingValues] = useState(false);
-  const [filteredRecipes, setFilteredRecipes] = useState([]);
 
+  // New picklist states
+  const [courseValues, setCourseValues] = useState([]);
+  const [cuisineValues, setCuisineValues] = useState([]);
+  const [primaryValues, setPrimaryValues] = useState([]);
+
+  // Pagination logic
   const [recipesPerPage, setRecipesPerPage] = useState(() => {
     const saved = localStorage.getItem('recipesPerPage');
     return saved ? Number(saved) : 10; // default 10
   });
 
-  // Refs for polling
-  const prevRecipeCountRef = useRef(0);
-  const pollIntervalRef = useRef(null);
   // Configurable constants for pagination
-  // Pagination logic
-  const recipesToShow = filteredRecipes || recipes;
+  const recipesToShow = recipes;
   const totalRecipes = recipesToShow.length;
   const totalPages = Math.ceil(totalRecipes / recipesPerPage);
   const startIndex = (currentPage - 1) * recipesPerPage;
   const endIndex = startIndex + recipesPerPage;
   const paginatedRecipes = recipesToShow.slice(startIndex, endIndex);
 
+  // Refs for polling
+  const prevRecipeCountRef = useRef(0);
+  const pollIntervalRef = useRef(null);
+
+  // Load picklist values ONCE
+  const refreshPicklistValues = async () => {
+    const [courses, cuisines, primary] = await Promise.all([
+      api.get("/api/recipe-values?type=course").then(r => r.data),
+      api.get("/api/recipe-values?type=cuisine").then(r => r.data),
+      api.get("/api/recipe-values?type=primary_ingredient").then(r => r.data)
+    ]);
+
+    setCourseValues(courses);
+    setCuisineValues(cuisines);
+    setPrimaryValues(primary);
+  };
   useEffect(() => {
-    applyFilter();
-  }, [searchValue, searchCategory, recipes]);   // ← add this if you want live filtering
-
-  useEffect(() => {
-    if (!searchCategory) {
-      setAvailableValues([]);
-      setSearchValue('');
-      setFilteredRecipes(null);
-      return;
-    }
-
-
-
     const loadValues = async () => {
-      setLoadingValues(true);
-      try {
-        // Option A: Ask backend for distinct values (recommended long-term)
-        // const res = await api.get(`/api/recipes/distinct/${searchCategory}`);
-        // Option B: For now — extract from already loaded recipes (quick & works without backend change)
-        const unique = [...new Set(
-          recipes
-            .map(r => r[searchCategory])
-            .filter(Boolean)
-        )].sort();
-
-        setAvailableValues(unique);
-      } catch (err) {
-        console.error(err);
-        setAvailableValues([]);
-      } finally {
-        setLoadingValues(false);
-      }
+      await refreshPicklistValues();
     };
-
     loadValues();
-  }, [searchCategory, recipes]);
-
-
-  const applyFilter = () => {
-    if (!searchCategory || !searchValue) {
-      setFilteredRecipes(null); // show all
-      return;
-    }
-
-
-    let filtered;
-
-    if (searchCategory === "name") {
-      filtered = recipes.filter(recipe =>
-        recipe.title &&
-        recipe.title.toLowerCase().includes(searchValue.toLowerCase())
-      );
-    }
-    else if (searchCategory === "ingredients") {
-      filtered = recipes.filter(recipe =>
-        recipe.title &&
-        recipe.title.toLowerCase().includes(searchValue.toLowerCase())
-      );
-    }
-    else {
-      filtered = recipes.filter(recipe => {
-        const value = recipe[searchCategory];
-        if (value === undefined || value === null) return false;
-        return String(value).toLowerCase() === searchValue.toLowerCase();
-      });
-    }
-
-    setFilteredRecipes(filtered);
-    setCurrentPage(1); // Reset to page 1 on filter change
-  };  
-
-  useEffect(() => {
-    fetchRecipes();
   }, []);
 
-const handleLogout = () => {
-  logout();
-  navigate("/login");
-};
 
-  const handleLogin = () => {
-    logout();
-    navigate("/login");
+  // Build query string based on selected filter
+  const buildQueryString = () => {
+    const params = new URLSearchParams();
+    // params.append("user_id", userId);
+    if (searchCategory === "title" && searchValue) {
+      params.append("title", searchValue);
+    }
+    if (searchCategory === "ingredients" && searchValue) {
+      params.append("ingredient", searchValue);
+    }
+    if (searchCategory === "course" && searchValue) {
+      params.append("course", searchValue);
+    }
+    if (searchCategory === "cuisine" && searchValue) {
+      params.append("cuisine", searchValue);
+    }
+    if (searchCategory === "primary_ingredient" && searchValue) {
+      params.append("primary-ingredient", searchValue);
+    }
+    return params.toString();
   };
 
+  useEffect(() => {
+    if (searchCategory === "") {
+      fetchRecipes();   // reload all recipes
+    }
+  }, [searchCategory]);
+
+
+  // Fetch recipes from backend
   const fetchRecipes = async () => {
+    setLoading(true);
+    setMessage(null);
+    setUploadError(null);
+    setError(null);
     try {
-      const response = await api.get("/api/recipes");
-      if (response.status === 204) {
+      const query = buildQueryString();
+      const response = await api.get(`/api/recipes?${query}`);
+      if (response.status === 200 && response.data.msg) {
         // Handle "no content" case – show your message
         setRecipes([]); // or set a flag
-        setMessage("You currently do not have any recipes saved.  Let's get started!");
+        setMessage(response.data.msg)
+        // setMessage("You currently do not have any recipes saved.  Let's get started!");
         return;
-      }      
+      }
+      else if (response.status === 204) {
+        setRecipes([]); // or set a flag
+        setMessage("You currently do not have any recipes saved.  Let's get started!");
+      }
+
       console.log("Fetched recipes:", response.config.headers);
       setRecipes(response.data);
       prevRecipeCountRef.current = response.data.length;
     } catch (err) {
       console.error("Error fetching recipes:", err);
       setError("Failed to load recipes");
+    } finally {
+      setLoading(false);
     }
   };
+
+  // Fetch on first load
+  useEffect(() => {
+    fetchRecipes();
+  }, []);
+
+  // Fetch whenever filters change
+  useEffect(() => {
+    if (searchCategory && searchValue !== "") {
+      const timeout = setTimeout(() => fetchRecipes(), 300);
+      return () => clearTimeout(timeout);
+    }
+  }, [searchCategory, searchValue]);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
+  const handleLogin = () => {
+    logout();
+    navigate("/login");
+  };  
+
+
+
+  useEffect(() => {
+    const loadValues = async () => {
+      const [courses, cuisines, primary] = await Promise.all([
+        api.get("/api/recipe-values?type=course").then(r => r.data),
+        api.get("/api/recipe-values?type=cuisine").then(r => r.data),
+        api.get("/api/recipe-values?type=primary_ingredient").then(r => r.data)
+      ]);
+      setCourseValues(courses);
+      setCuisineValues(cuisines);
+      setPrimaryValues(primary);
+    };
+
+    loadValues();
+  }, []);
 
   const goToPage = (page) => {
     if (page >= 1 && page <= totalPages) {
@@ -195,6 +217,9 @@ const handleLogout = () => {
         // If count increased → new recipe arrived
         if (currentRecipes.length > prevRecipeCountRef.current && status === "completed") {
           clearInterval(pollIntervalRef.current);
+          refreshPicklistValues();
+          setMessage(null);
+
           pollIntervalRef.current = null;
 
           setRecipes(currentRecipes);
@@ -287,17 +312,18 @@ const handleLogout = () => {
 
   const handleFileChange = (e) => {
     setSelectedFile(e.target.files[0]);
-    setError("");
+    setUploadError("");
   };
 
   const handleFileUpload = async () => {
     if (!selectedFile) {
-      setError("Please select a file first");
+      setUploadError("Please select a file first");
       return;
     }
 
     setLoading(true);
     setError("");
+    setUploadError("");
     const formData = new FormData();
     formData.append("file", selectedFile);
 
@@ -319,7 +345,7 @@ const handleLogout = () => {
       document.getElementById("fileInput").value = "";
       await fetchRecipes();
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to upload recipe");
+      setUploadError(err.response?.data?.error || "Failed to upload recipe");
     }
 
     setLoading(false);
@@ -330,7 +356,7 @@ const handleLogout = () => {
     if (!url) return;
 
     setLoading(true);
-    setError("");
+    setUploadError("");
 
     try {
       const response = await api.post(
@@ -349,14 +375,11 @@ const handleLogout = () => {
       setUrl("");
       await fetchRecipes();
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to add recipe from URL");
+      setUploadError(err.response?.data?.error || "Failed to add recipe from URL");
     }
 
     setLoading(false);
   };
-
-
-
 
   const handleDelete = async (id, title) => {
     // Optional: early return if no id (defensive)
@@ -386,8 +409,6 @@ const handleLogout = () => {
     }
   };
 
-
-
   const handleEdit = async (id, title) => {
     // if (!window.confirm(`Delete "${title}"?`)) return;
 
@@ -403,7 +424,7 @@ const handleLogout = () => {
       <header className="App-header">
         <div className="header-content">
 
-          <h1>🍳 The Recipe Ripper Database <span style={{ fontSize: ".27EM" }}>v:7.5.2 - 04-23-2026:14:50</span></h1> 
+          <h1>🍳 The Recipe Ripper Database <span style={{ fontSize: ".27EM" }}>v:7.5.2 - 04-24-2026:11:46</span></h1> 
           <button className="auth-button"
             onClick={isLoggedIn ? handleLogout : handleLogin}
         >
@@ -412,15 +433,14 @@ const handleLogout = () => {
         </div>
       </header>   
 
-
       <div className="container">
         {/* LEFT SIDE */}
         <div className="left">
           <div className="add-recipe-section">
             <h2>Add New Recipe</h2>
 
-            {error && <div className="error-message">{error}</div>}
-            {message && !error && <div className="status-message">{message}</div>}
+            {uploadError && <div className="error-message">{error}</div>}
+            {/* {message && !error && <div className="status-message">{message}</div>} */}
 
             {/* File Upload */}
             <div className="upload-option">
@@ -485,82 +505,89 @@ const handleLogout = () => {
               <h2 style={{ margin: 0 }}>
                 My Recipes ({recipes.length})</h2>
 
-              {/* ──→  New search controls start here  ──→ */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>   {/* ──→  New search controls start here  ──→ */}
 
                 <select
                   value={searchCategory}
                   onChange={(e) => {
                     setSearchCategory(e.target.value);
                     setSearchValue('');
-                    setSearchValue(''); // reset second field when category changes
+                    // setSearchValue(''); // reset second field when category changes
                   }}
                   style={{ padding: '0.5rem', minWidth: '140px', fontSize: '1rem' }}
                 >
                   <option value="">All categories</option>
-                  <option value="name">Recipe Name</option>
-                  <option value="ingredients">ingredients</option>
-                  <option value="title">Recipe List</option>
+                  <option value="title">Recipe Title</option>
+                  <option value="ingredients">Ingredients</option>
                   <option value="course">Course</option>
                   <option value="cuisine">Cuisine</option>
                   <option value="primary_ingredient">Main Ingredient</option>
                   {/* Add more filter types later if needed */}
                 </select>
 
-                {searchCategory === "name" ? (
-                  <input
-                    type="text"
-                    value={searchValue}
-                    onChange={(e) => setSearchValue(e.target.value)}
-                    placeholder="Recipe name contains..."
-                    style={{ padding: '0.5rem', minWidth: '180px', fontSize: '1rem' }}
-                  />
-                ) : searchCategory === "ingredients" ? (
-                  <input
-                    type="text"
-                    value={searchValue}
-                    onChange={(e) => setSearchValue(e.target.value)}
-                    placeholder="Ingredients contain..."
-                    style={{ padding: '0.5rem', minWidth: '180px', fontSize: '1rem' }}
-                  />
-                  ) : (
+                {(() => {
+
+                  if (searchCategory === "title") {
+                    return (
+                      <input
+                        type="text"
+                        value={searchValue}
+                        onChange={(e) => setSearchValue(e.target.value)}
+                        placeholder="Recipe title contains..."
+                        style={{ padding: '0.5rem', minWidth: '180px', fontSize: '1rem' }}
+                      />
+                    );
+                  }
+
+                  if (searchCategory === "ingredients") {
+                    return (
+                      <input
+                        type="text"
+                        value={searchValue}
+                        onChange={(e) => setSearchValue(e.target.value)}
+                        placeholder="Ingredients contain..."
+                        style={{ padding: '0.5rem', minWidth: '180px', fontSize: '1rem' }}
+                      />
+                    );
+                  }
+
+                  // Dropdown categories
+                  return (
                     <select
                       value={searchValue}
+                      style={{ padding: '0.5rem', minWidth: '180px', fontSize: '1rem' }}
                       onChange={(e) => setSearchValue(e.target.value)}
                       disabled={!searchCategory}
-                      style={{ padding: '0.5rem', minWidth: '180px', fontSize: '1rem' }}
                     >
-                      <option value="">
-                        {loadingValues ? 'Loading...' : 'Select value...'}
-                      </option>
-                      {availableValues.map((val) => (
-                        <option key={val} value={val}>
-                          {val}
-                        </option>
-                      ))}
-                    </select>
-                )}
+                      <option value="">Select value...</option>
 
-                {/* {(searchCategory || searchValue) && (
-                  <button
-                    onClick={() => {
-                      setSearchCategory('');
-                      setSearchValue('');
-                      setFilteredRecipes(null); // or just rely on empty filter
-                    }}
-                    style={{ background: '#f44336', color: 'white', width: '80px' }}
-                  >
-                    Clear
-                  </button> */}
-                {/* )} */}
-              </div>
-              {/* ←─  New search controls end here  ←─ */}
+                      {searchCategory === "course" &&
+                        courseValues.map((val) => (
+                          <option key={val} value={val}>{val}</option>
+                        ))}
+
+                      {searchCategory === "cuisine" &&
+                        cuisineValues.map((val) => (
+                          <option key={val} value={val}>{val}</option>
+                        ))}
+
+                      {searchCategory === "primary_ingredient" &&
+                        primaryValues.map((val) => (
+                          <option key={val} value={val}>{val}</option>
+                        ))}
+                    </select>
+                  );
+                })()}
+
+
+              </div>  {/* ←─  New search controls end here  ←─ */}
 
             </div>            
 
 
             {loading && <p className="loading">Loading...</p>}
-            {/* {error && <p className="error-message">{error}</p>} */}
+            {error && <p className="error-message">{error}</p>}
             {message && <p className="status-message">{message}</p>}            
 
             <div className="recipes-grid">
@@ -568,13 +595,14 @@ const handleLogout = () => {
               {/* {filteredRecipes !== null && ( */}
               {paginatedRecipes.length === 0 && totalRecipes > 0 && (  
                 <p style={{ color: "#555", marginBottom: "1rem" }}>
-                  Showing {filteredRecipes.length} filtered recipe(s)
-                  {filteredRecipes.length === 0 && " — no matches"}
+                  Showing {recipes.length} filtered recipe(s)
+                  {recipes.length === 0 && " — no matches"}
                 </p>
               )}
 
               {/* {(filteredRecipes !== null ? filteredRecipes : recipes).map((recipe) => ( */}
-              {paginatedRecipes.map((recipe) => (
+              {paginatedRecipes && paginatedRecipes.length > 0 ? (
+                paginatedRecipes.map((recipe) => (
                 <div key={recipe.id} className="recipe-card">
                   <div className="recipe-header">
                     <h4>
@@ -625,7 +653,13 @@ const handleLogout = () => {
                     </div>
                     </div>                  
                 </div>
-              ))}
+                )
+                )
+              )
+                : (<p style={{ padding: "1rem", fontStyle: "italic" }}>
+                  No recipes found.
+                </p>)
+              }
               {/* </div> */}
               {/* ── Pagination Controls ── */}
               {totalPages > 1 && (

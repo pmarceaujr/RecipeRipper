@@ -90,12 +90,68 @@ def save_recipe(recipe_data, user_id):
         raise e
 
 
-def get_all_recipes(user_id):
-    """Get all recipes with their ingredients and directions"""
+def get_picklist_values(user_id, value_type):
+    # Recipe.query.filter_by(user_id=user_id).order_by(Recipe.created_at.desc())
+    try:
+        logging.info("In getting picklist values")
+        column = getattr(Recipe, value_type)
+        values = (
+            db.session.query(column)
+            .filter(Recipe.user_id == user_id)
+            .filter(column.isnot(None))
+            .distinct()
+            .order_by(column.asc())
+            .all()
+        )
+
+        if values is not None:
+            # logging.info(f"In if: {values}")
+            result = [v[0] for v in values] #[]
+            return result
+        else:
+            return values
+
+        # Flatten SQLAlchemy tuples: [('Dinner',), ('Lunch',)] → ['Dinner', 'Lunch']
+        values = [v[0] for v in values]
+    except Exception as e:
+        logging.error(f"Error getting picklist values: {e}")
+        raise e
+
+def get_all_recipes(user_id, filters=None):
+    """
+    Get all recipes for a user, with optional filtering.
+    `filters` is a dict containing query params like:
+    {
+        "name": "chicken",
+        "ingredient": "garlic",
+        "course": "dinner",
+        "cuisine": "american",
+        "main_ingredient": "chicken"
+    }
+    """
     logging.info("Inside get_all_recipes function")
     # user_id_= int(user_id)
     try:
         recipe_data = Recipe.query.filter_by(user_id=user_id).order_by(Recipe.created_at.desc())
+
+        if filters:
+            title = filters.get("title")
+            ingredient = filters.get("ingredient")
+            course = filters.get("course")
+            cuisine = filters.get("cuisine")
+            primary_ingredient = filters.get("primary_ingredient")
+
+            if title:
+                recipe_data = recipe_data.filter(Recipe.title.ilike(f"%{title}%"))
+            if ingredient:
+                recipe_data = recipe_data.filter(Recipe.ingredients.ilike(f"%{ingredient}%"))
+            if course:
+                recipe_data = recipe_data.filter(Recipe.course == course)
+            if cuisine:
+                recipe_data = recipe_data.filter(Recipe.cuisine == cuisine)
+            if primary_ingredient:
+                recipe_data = recipe_data.filter(Recipe.primary_ingredient == primary_ingredient)                
+
         if recipe_data is not None:
             result = []
             for recipe in recipe_data:

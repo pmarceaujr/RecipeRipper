@@ -13,7 +13,7 @@ from ..models.recipe import Recipe
 from ..models.ingredient import Ingredient
 from ..models.direction import Direction
 from ..models.comment import Comment
-from ..utils.database import get_all_recipes, get_recipe_by_id, update_recipe_by_id, delete_recipe, save_recipe   
+from ..utils.database import get_all_recipes, get_recipe_by_id, update_recipe_by_id, delete_recipe, save_recipe, get_picklist_values  
 from ..utils.parser import *
 import logging
 
@@ -31,6 +31,27 @@ ALLOWED_EXTENSIONS = {'.txt', '.pdf', '.jpg', '.jpeg', '.png'}
 def allowed_file(filename):
     return os.path.splitext(filename)[1].lower() in ALLOWED_EXTENSIONS
 
+
+@recipes_bp.route("/recipe-values", methods=["GET"])
+@jwt_required()
+def get_recipe_values():
+    logging.info("Populating Picklist values")
+    user_id = get_jwt_identity()
+    value_type = request.args.get("type")
+
+    if value_type not in ["course", "cuisine", "primary_ingredient"]:
+        return jsonify({"error": "Invalid type"}), 400
+
+    try:
+        # Query distinct values from the Recipe table
+        values = get_picklist_values(user_id, value_type)
+        return jsonify(values), 200
+
+    except Exception as e:
+        logging.error(f"Error fetching recipe values: {e}")
+        return jsonify({"error": "Server error"}), 500
+
+
 @recipes_bp.route('/recipes', methods=['GET'])
 @jwt_required()
 def get_recipes():
@@ -38,10 +59,26 @@ def get_recipes():
     """Get all recipes"""
     try:
         user_id = get_jwt_identity()
-        # logging.info(f"User ID: {user_id}")
-        recipes = get_all_recipes(user_id)
-        if not recipes or len(recipes) == 0:
-            return jsonify({"msg": "You currently do not have any recipes saved."}), 204         
+
+        filters = {
+            "title": request.args.get("title"),
+            "ingredient": request.args.get("ingredient"),
+            "course": request.args.get("course"),
+            "cuisine": request.args.get("cuisine"),
+            "primary_ingredient": request.args.get("primary-ingredient")
+           
+        }
+
+        # Remove empty filters
+        filters = {k: v for k, v in filters.items() if v}
+
+
+        recipes = get_all_recipes(user_id, filters)
+
+        if (recipes == [] or len(recipes) == 0) and (filters != {} and filters is not None):
+            return jsonify({"msg": "Could not find any recipes matching your search.  Please refine your search."}), 200       
+        elif (not recipes or len(recipes) == 0):
+            return jsonify("204 strips any message, so it doesn't matter"), 204   
         return jsonify(recipes)
     except Exception as e:
         logging.error(f"Error fetching recipes: {e}")

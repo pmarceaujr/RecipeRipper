@@ -1,9 +1,9 @@
-import { Navigate, Route, BrowserRouter as Router, Routes } from "react-router-dom";
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import InactivityHandler from "./auth/InactivityHandler";
 import ProtectedRoute from "./auth/ProtectedRoute";
 
 import "./assets/css/App.css";
-import recipeRipperLogo from "./assets/images/recipe_ripper_logo.png";
+// import recipeRipperLogo from "./assets/images/recipe_ripper_logo.png";
 import ForgotPassword from "./pages/ForgotPassword";
 import Homepage from "./pages/Homepage";
 import Login from "./pages/Login";
