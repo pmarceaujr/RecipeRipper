@@ -4,6 +4,7 @@ from ..extensions import db
 from ..models.user import User
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from flask_mail import Mail, Message  # For reset
+from sqlalchemy import func
 import os
 import requests
 import logging
@@ -48,14 +49,14 @@ def register():
         return jsonify({'error': 'reCAPTCHA verification failed. Are you a bot?'}), 400
 
 
-    existing_user = User.query.filter((User.username == data['username']) | (User.email == data['email'])).first()
+    existing_user = User.query.filter((func.lower(User.username) == data['username'].lower()) | (func.lower(User.email) == data['email'].lower())).first()
     if existing_user:
         if existing_user.email == data['email']:
             return jsonify({'error': 'Email already in use, please use a different email'}), 409
         if existing_user.username == data['username']:
             return jsonify({'error': 'Username already in use, please use a different username'}), 409
-    user = User(username=data['username'], 
-                email=data['email'],
+    user = User(username=data['username'].lower(), 
+                email=data['email'].lower(),
                 first_name=data['firstname'], 
                 last_name=data['lastname'])
     user.set_password(data['password'])
@@ -68,9 +69,9 @@ def register():
 def login():
     logging.info("In Login Function")
     data = request.json
-    user = User.query.filter_by(email=data['userId']).first()
+    user = User.query.filter(func.lower(User.email) == data['userId'].strip().lower()).first()
     if not user:
-        user = User.query.filter_by(username=data['userId']).first()
+        user = User.query.filter(func.lower(User.username) == data['userId'].strip().lower()).first()
     if not user:
         return jsonify({'error': 'User not found.  Please check your credentials or register for an account.'}), 401
     user_id = str(user.id)
