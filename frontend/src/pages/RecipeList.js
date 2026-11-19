@@ -424,7 +424,7 @@ export default function RecipeList() {
       <header className="App-header">
         <div className="header-content">
 
-          <h1>🍳 The Recipe Ripper Database <span style={{ fontSize: ".27EM" }}>v:7.5.2 - 04-24-2026:11:46</span></h1> 
+          <h1>🍳 The Recipe Ripper Database <span style={{ fontSize: ".27EM" }}>v:7.5.3 - 11-12-2026:11:51</span></h1> 
           <button className="auth-button"
             onClick={isLoggedIn ? handleLogout : handleLogin}
         >
@@ -628,9 +628,9 @@ export default function RecipeList() {
                     {recipe.total_time}                    
                   </p>
 
-                  {recipe.recipe_source && (
+                    {/* {recipe.recipe_source && (
                     <p className="recipe-source">
-                      <strong>Source:</strong>{" "}
+                        <strong>SourceLine:</strong>{" "}
                       {recipe.is_url === 1 ? (
                         recipe.recipe_source
                       ) : (
@@ -643,7 +643,7 @@ export default function RecipeList() {
                         </a>
                       )}
                     </p>
-                  )}
+                  )} */}
                     <div className="recipe-actions">
                       <div className="tooltip">
                       <button className="edit-btn" onClick={() => handleEdit(recipe.id)} title="Edit">✏️</button>

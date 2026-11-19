@@ -19,7 +19,7 @@
   },
   "scripts": {
     "start": "serve -s build",
-    "start-local": "react-scripts start ",
+    "start-local": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts start",
     "test-local": "react-scripts test",
